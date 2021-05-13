@@ -67,7 +67,3 @@ module.exports.validateUserEditInput = (
     valid: Object.keys(errors).length < 1,
   };
 };
-
-// TODO handle if there's only one question in a module
-// TODO buy domain name
-// TODO ORGNAME should be taken as FRC ___ on signup

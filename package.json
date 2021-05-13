@@ -1,5 +1,5 @@
 {
-  "name": "lynx-institute",
+  "name": "cs-12-final-project",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -14,14 +14,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SuhanaNadeem/LYNX-Institute-Server.git"
+    "url": "git+https://github.com/SuhanaNadeem/CS-12-Final-Project-Server.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/SuhanaNadeem/LYNX-Institute-Server/issues"
+    "url": "https://github.com/SuhanaNadeem/CS-12-Final-Project-Server/issues"
   },
-  "homepage": "https://github.com/SuhanaNadeem/LYNX-Institute-Server#readme",
+  "homepage": "https://github.com/SuhanaNadeem/CS-12-Final-Project-Server#readme",
   "dependencies": {
     "@sendgrid/mail": "^7.2.1",
     "amazon-s3-uri": "^0.0.3",

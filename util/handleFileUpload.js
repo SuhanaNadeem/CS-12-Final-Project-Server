@@ -1,5 +1,5 @@
 const AWS = require("aws-sdk");
-// lynx each image in it's own unique folder to avoid name duplicates
+// cs each image in it's own unique folder to avoid name duplicates
 const { customAlphabet } = require("nanoid");
 const nanoid = customAlphabet("0123456789", 10);
 
@@ -41,7 +41,7 @@ async function doesS3URLExist(imageUrl) {
 module.exports.doesS3URLExist = doesS3URLExist;
 
 // the actual upload happens here
-async function handleLynxFileUpload(file) {
+async function handleCsFileUpload(file) {
   const { createReadStream, filename } = await file;
   const metaData = getContentTypeByFile(filename);
 
@@ -54,7 +54,7 @@ async function handleLynxFileUpload(file) {
       {
         ...s3DefaultParams,
         // Body: createReadStream(),
-        Bucket: process.env.S3_LYNX_BUCKET,
+        Bucket: process.env.S3_CS_BUCKET,
         Body: stream,
         Key: `${key}/${filename}`,
         ContentType: metaData.type,
@@ -71,13 +71,13 @@ async function handleLynxFileUpload(file) {
   });
 }
 
-module.exports.handleLynxFileUpload = handleLynxFileUpload;
+module.exports.handleCsFileUpload = handleCsFileUpload;
 
-async function handleLynxFileDelete(fileKey) {
+async function handleCsFileDelete(fileKey) {
   return new Promise((resolve, reject) => {
     s3.deleteObject(
       {
-        Bucket: process.env.S3_LYNX_BUCKET,
+        Bucket: process.env.S3_CS_BUCKET,
         Key: fileKey,
       },
       (err, data) => {
@@ -90,7 +90,7 @@ async function handleLynxFileDelete(fileKey) {
     );
   });
 }
-module.exports.handleLynxFileDelete = handleLynxFileDelete;
+module.exports.handleCsFileDelete = handleCsFileDelete;
 
 function getContentTypeByFile(fileName) {
   var rc = { type: "image/jpeg", extension: ".jpeg" };

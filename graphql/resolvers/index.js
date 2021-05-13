@@ -1,39 +1,16 @@
 const adminResolvers = require("./admins");
-const mentorResolvers = require("./mentors");
-const studentResolvers = require("./students");
-const categoryResolvers = require("./categories");
-const moduleResolvers = require("./modules");
-const questionResolvers = require("./questions");
-const questionTemplateResolvers = require("./questionTemplates");
-const challengeResolvers = require("./challenges");
-const badgeResolvers = require("./badges");
-const answerResolvers = require("./answers");
-const fileResolvers = require("./files");
+const userResolvers = require("./users");
+
 const { GraphQLDateTime } = require("graphql-iso-date");
 
 module.exports = {
   DateTime: GraphQLDateTime,
   Query: {
     ...adminResolvers.Query,
-    ...studentResolvers.Query,
-    ...mentorResolvers.Query,
-    ...categoryResolvers.Query,
-    ...moduleResolvers.Query,
-    ...questionResolvers.Query,
-    ...questionTemplateResolvers.Query,
-    ...challengeResolvers.Query,
-    ...badgeResolvers.Query,
-    ...answerResolvers.Query,
-    ...fileResolvers.Query,
+    ...userResolvers.Query,
   },
   Mutation: {
     ...adminResolvers.Mutation,
-    ...studentResolvers.Mutation,
-    ...mentorResolvers.Mutation,
-    ...badgeResolvers.Mutation,
-    ...moduleResolvers.Mutation,
-    ...questionResolvers.Mutation,
-    ...answerResolvers.Mutation,
-    ...fileResolvers.Mutation,
+    ...userResolvers.Mutation,
   },
 };
