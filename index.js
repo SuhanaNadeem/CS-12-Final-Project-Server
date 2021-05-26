@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const { ApolloServer, PubSub } = require("apollo-server");
 
 const mongoose = require("mongoose");
@@ -19,7 +21,7 @@ const server = new ApolloServer({
 
   subscriptions: { path: "/subscriptions" },
 });
-
+// console.log(process.env.MONGODB);
 mongoose
   .connect(process.env.MONGODB, {
     useNewUrlParser: true,

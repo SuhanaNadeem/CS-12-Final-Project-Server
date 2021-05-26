@@ -52,6 +52,7 @@ module.exports = gql`
   # retrieve information
   type Query {
     getAdmin: Admin! # done checked
+    getAdminById(adminId: String!): Admin! # done checked
     getUser: User! # done checked
   }
 
