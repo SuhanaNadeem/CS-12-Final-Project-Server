@@ -3,8 +3,8 @@ const jwt = require("jsonwebtoken");
 const { AdminInputError } = require("apollo-server");
 
 const {
-  validateAdminRegisterInput,
-  validateAdminLoginInput,
+  validateUserRegisterInput,
+  validateUserLoginInput,
 } = require("../../util/validators");
 const SECRET_KEY = process.env.SECRET_ADMIN_KEY;
 const Admin = require("../../models/Admin");
@@ -25,6 +25,7 @@ function generateToken(admin) {
 module.exports = {
   Query: {
     async getAdmin(_, {}, context) {
+      console.log("coming here in getAdmin");
       try {
         const admin = checkAdminAuth(context);
         const targetAdmin = await Admin.findById(admin.id);
@@ -33,10 +34,29 @@ module.exports = {
         throw new AuthenticationError();
       }
     },
+    async getAdminById(_, { adminId }, context) {
+      console.log("comes in here in getAdminById");
+      try {
+        const admin = checkAdminAuth(context);
+      } catch (error) {
+        throw new AuthenticationError();
+      }
+
+      const targetAdmin = await Admin.findById(adminId);
+      if (!targetAdmin) {
+        throw new UserInputError("No such admin", {
+          errors: {
+            adminId: "There is no admin with this ID",
+          },
+        });
+      } else {
+        return targetAdmin;
+      }
+    },
   },
   Mutation: {
-    async signupAdmin(_, { email, password, confirmPassword }, context) {
-      var { valid, errors } = validateAdminRegisterInput(
+    async signupAdmin(_, { name, email, password, confirmPassword }, context) {
+      var { valid, errors } = validateUserRegisterInput(
         email,
         password,
         confirmPassword
@@ -57,6 +77,9 @@ module.exports = {
       password = await bcrypt.hash(password, 12);
 
       const newAdmin = new Admin({
+        name,
+        email,
+        password,
         createdAt: new Date(),
       });
 
@@ -68,7 +91,8 @@ module.exports = {
     },
 
     async loginAdmin(_, { email, password }, context) {
-      const { errors, valid } = validateAdminLoginInput(email, password);
+      console.log("Coming in here: loginAdmin");
+      const { errors, valid } = validateUserLoginInput(email, password);
       if (!valid) {
         throw new AdminInputError("Errors", { errors });
       }
