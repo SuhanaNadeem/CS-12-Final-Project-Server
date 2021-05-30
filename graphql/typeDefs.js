@@ -25,25 +25,16 @@ module.exports = gql`
     token: String
   }
 
-  "THIS OBJECT IS DEPRECATED because url links to files are stored in stores, products, etc. Files store a url link to files uploaded to S3."
   type File {
-    # "Unique identifier for the object."
-    # id: String!
-    "The file's name."
     filename: String!
-    "The file extension."
     mimetype: String!
-    "The encoding format."
     encoding: String!
-    # "The S3 url of the file."
     url: String!
-    # "The date and time when this file was created."
     createdAt: DateTime!
   }
-  "This is a return type that helps in formatting the returns statements of file upload functions."
+
   type S3Object {
     ETag: String
-    "The URL of the file."
     Location: String!
     Key: String!
     Bucket: String!
@@ -51,9 +42,9 @@ module.exports = gql`
 
   # retrieve information
   type Query {
-    getAdmin: Admin! # done checked
-    getAdminById(adminId: String!): Admin! # done checked
-    getUser: User! # done checked
+    getAdmin: Admin!
+    getAdminById(adminId: String!): Admin!
+    getUser: User!
   }
 
   # actions
@@ -75,5 +66,11 @@ module.exports = gql`
     ): User!
     loginUser(email: String!, password: String!): User!
     deleteUser(userId: String!): String
+
+    uploadCsFile(file: Upload!): S3Object!
+    deleteCsFile(fileKey: String!): String!
+
+    # uploadRecordedFile(audioUri: String!): String!
+    # # TODO: configure this properly so you can pass in URI to upload (ignore above function for now)
   }
 `;

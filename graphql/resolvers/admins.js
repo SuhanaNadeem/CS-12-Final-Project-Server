@@ -6,6 +6,7 @@ const {
   validateUserRegisterInput,
   validateUserLoginInput,
 } = require("../../util/validators");
+
 const SECRET_KEY = process.env.SECRET_ADMIN_KEY;
 const Admin = require("../../models/Admin");
 
@@ -25,7 +26,7 @@ function generateToken(admin) {
 module.exports = {
   Query: {
     async getAdmin(_, {}, context) {
-      console.log("coming here in getAdmin");
+      // console.log("coming here in getAdmin");
       try {
         const admin = checkAdminAuth(context);
         const targetAdmin = await Admin.findById(admin.id);

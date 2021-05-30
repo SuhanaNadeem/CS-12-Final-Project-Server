@@ -19,7 +19,7 @@ const s3 = new AWS.S3({ region: process.env.AWS_REGION });
 // I have a max upload size of 1 MB
 const s3DefaultParams = {
   ACL: "public-read",
-  // Bucket: process.env.S3_BUCKET_NAME,
+  Bucket: process.env.S3_CS_BUCKET,
   Conditions: [
     ["content-length-range", 0, 1024000], // 1 Mb
     { acl: "public-read" },
@@ -27,8 +27,6 @@ const s3DefaultParams = {
 };
 
 async function doesS3URLExist(imageUrl) {
-  // imageUrl.search("bh-products-images.s3.amazonaws.com") ||
-  // conn.getresponse().status >= 400
   try {
     const { region, bucket, key } = AmazonS3URI(imageUrl);
     if (region && bucket && key) {
@@ -40,7 +38,6 @@ async function doesS3URLExist(imageUrl) {
 }
 module.exports.doesS3URLExist = doesS3URLExist;
 
-// the actual upload happens here
 async function handleCsFileUpload(file) {
   const { createReadStream, filename } = await file;
   const metaData = getContentTypeByFile(filename);
@@ -53,7 +50,6 @@ async function handleCsFileUpload(file) {
     s3.upload(
       {
         ...s3DefaultParams,
-        // Body: createReadStream(),
         Bucket: process.env.S3_CS_BUCKET,
         Body: stream,
         Key: `${key}/${filename}`,
@@ -117,6 +113,9 @@ function getContentTypeByFile(fileName) {
   } else if (fn.indexOf(".gif") >= 0) {
     rc.type = "image/gif";
     rc.type = ".gif";
+  } else if (fn.indexOf(".caf") >= 0) {
+    rc.type = "audio/caf";
+    rc.type = ".caf";
   }
 
   return rc;
