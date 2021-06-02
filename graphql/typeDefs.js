@@ -50,6 +50,7 @@ module.exports = gql`
     getUser: User!
     getUsers: [User]!
     getUserById(userId: String!): User!
+    getS3RecordingUrls(userId: String!): [String]
   }
 
   # actions
@@ -79,5 +80,7 @@ module.exports = gql`
     # # TODO: configure this properly so you can pass in URI to upload (ignore above function for now)
 
     addS3RecordingUrl(s3RecordingUrl: String!, userId: String!): [String]
+
+    removeS3RecordingUrl(urlToRemove: String!, userId: String!): [String]
   }
 `;

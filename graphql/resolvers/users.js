@@ -65,6 +65,25 @@ module.exports = {
         return targetUser;
       }
     },
+    async getS3RecordingUrls(_, { userId }, context) {
+      console.log("Grabs s3 recordings");
+      try {
+        var admin = checkAdminAuth(context);
+      } catch (error) {
+        try {
+          var user = checkUserAuth(context);
+        } catch (error) {
+          throw new Error(error);
+        }
+      }
+      const targetUser = await User.findById(userId);
+      if (!targetUser) {
+        throw new UserInputError("Invalid user id");
+      }
+      console.log(targetUser.s3RecordingUrls);
+
+      return targetUser.s3RecordingUrls;
+    },
   },
   Mutation: {
     async signupUser(_, { name, email, password, confirmPassword }, context) {
@@ -170,6 +189,33 @@ module.exports = {
       }
       console.log(targetUser.s3RecordingUrls);
 
+
+      return targetUser.s3RecordingUrls;
+    },
+
+    async removeS3RecordingUrl(_, { urlToRemove, userId }, context) {
+      console.log("Removing s3 recording");
+      try {
+        var admin = checkAdminAuth(context);
+      } catch (error) {
+        try {
+          var user = checkUserAuth(context);
+        } catch (error) {
+          throw new Error(error);
+        }
+      }
+      const targetUser = await User.findById(userId);
+      if (!targetUser) {
+        throw new UserInputError("Invalid user id");
+      }
+      if (targetUser.s3RecordingUrls.includes(urlToRemove)) {
+        for (var i = 0; i < targetUser.s3RecordingUrls.length; i++) {
+          await targetUser.s3RecordingUrls.splice(urlToRemove, 1);
+        }
+        await targetUser.save();
+      }
+      console.log(targetUser.s3RecordingUrls);
+      
       return targetUser.s3RecordingUrls;
     },
   },
