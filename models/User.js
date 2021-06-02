@@ -11,6 +11,7 @@ const userSchema = new Schema({
   name: String,
   password: String,
   email: String,
+  s3RecordingUrls: [String],
   createdAt: Date,
 });
 

@@ -21,6 +21,8 @@ module.exports = gql`
     password: String!
     email: String!
 
+    s3RecordingUrls: [String]
+
     createdAt: DateTime!
     token: String
   }
@@ -44,7 +46,10 @@ module.exports = gql`
   type Query {
     getAdmin: Admin!
     getAdminById(adminId: String!): Admin!
+
     getUser: User!
+    getUsers: [User]!
+    getUserById(userId: String!): User!
   }
 
   # actions
@@ -72,5 +77,7 @@ module.exports = gql`
 
     # uploadRecordedFile(audioUri: String!): String!
     # # TODO: configure this properly so you can pass in URI to upload (ignore above function for now)
+
+    addS3RecordingUrl(s3RecordingUrl: String!, userId: String!): [String]
   }
 `;

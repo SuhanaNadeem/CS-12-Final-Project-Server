@@ -10,6 +10,7 @@ const SECRET_KEY = process.env.SECRET_USER_KEY;
 const User = require("../../models/User");
 
 const checkAdminAuth = require("../../util/checkAdminAuth");
+const checkUserAuth = require("../../util/checkUserAuth");
 
 function generateToken(user) {
   return jwt.sign(
@@ -24,6 +25,15 @@ function generateToken(user) {
 
 module.exports = {
   Query: {
+    async getUsers(_, {}, context) {
+      try {
+        const user = checkUserAuth(context);
+      } catch (error) {
+        throw new AuthenticationError();
+      }
+      const users = await User.find();
+      return users;
+    },
     async getUser(_, {}, context) {
       try {
         const user = checkUserAuth(context);
@@ -33,9 +43,31 @@ module.exports = {
         throw new AuthenticationError();
       }
     },
+    async getUserById(_, { userId }, context) {
+      console.log("comes in here in getUserById");
+      try {
+        var admin = checkAdminAuth(context);
+      } catch (error) {
+        try {
+          var user = checkUserAuth(context);
+        } catch (error) {
+          throw new Error(error);
+        }
+      }
+      const targetUser = await User.findById(userId);
+      if (!targetUser) {
+        throw new UserInputError("No such user", {
+          errors: {
+            userId: "There is no user with this ID",
+          },
+        });
+      } else {
+        return targetUser;
+      }
+    },
   },
   Mutation: {
-    async signupUser(_, { email, password, confirmPassword }, context) {
+    async signupUser(_, { name, email, password, confirmPassword }, context) {
       var { valid, errors } = validateUserRegisterInput(
         email,
         password,
@@ -57,6 +89,9 @@ module.exports = {
       password = await bcrypt.hash(password, 12);
 
       const newUser = new User({
+        name,
+        email,
+        password,
         createdAt: new Date(),
       });
 
@@ -68,10 +103,9 @@ module.exports = {
     },
 
     async loginUser(_, { email, password }, context) {
+      console.log("Enters log in user");
+
       const { errors, valid } = validateUserLoginInput(email, password);
-      if (!valid) {
-        throw new UserInputError("Errors", { errors });
-      }
 
       const user = await User.findOne({ email });
 
@@ -97,10 +131,10 @@ module.exports = {
 
     async deleteUser(_, { userId }, context) {
       try {
-        var user = checkAdminAuth(context);
+        var admin = checkAdminAuth(context);
       } catch (error) {
         try {
-          var user = checkMentorAuth(context);
+          var user = checkUserAuth(context);
         } catch (error) {
           throw new Error(error);
         }
@@ -113,6 +147,30 @@ module.exports = {
       } else {
         throw new UserInputError("Invalid input");
       }
+    },
+
+    async addS3RecordingUrl(_, { s3RecordingUrl, userId }, context) {
+      console.log("Enters s3 recording");
+      try {
+        var admin = checkAdminAuth(context);
+      } catch (error) {
+        try {
+          var user = checkUserAuth(context);
+        } catch (error) {
+          throw new Error(error);
+        }
+      }
+      const targetUser = await User.findById(userId);
+      if (!targetUser) {
+        throw new UserInputError("Invalid user id");
+      }
+      if (!targetUser.s3RecordingUrls.includes(s3RecordingUrl)) {
+        await targetUser.s3RecordingUrls.push(s3RecordingUrl);
+        await targetUser.save();
+      }
+      console.log(targetUser.s3RecordingUrls);
+
+      return targetUser.s3RecordingUrls;
     },
   },
 };
