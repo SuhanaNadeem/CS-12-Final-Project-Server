@@ -1,5 +1,5 @@
 node_modules/
-/learn.txt
+./util/cs-12-final-project-key
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
