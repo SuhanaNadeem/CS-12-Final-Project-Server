@@ -79,6 +79,6 @@ module.exports = gql`
 
     addS3RecordingUrl(s3RecordingUrl: String!, userId: String!): [String]
 
-    transcribeAudioChunk(s3AudioChunkUrl: String!): String!
+    transcribeAudioChunk(s3AudioChunkUrl: String!, userId: String!): String!
   }
 `;

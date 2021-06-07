@@ -4,7 +4,7 @@ const checkAdminAuth = require("../../util/checkAdminAuth");
 const {
   handleCsFileUpload,
   handleCsFileDelete,
-} = require("../../util/handleFileUpload");
+} = require("../../util/handleAWSFiles");
 
 const AmazonS3URI = require("amazon-s3-uri");
 
