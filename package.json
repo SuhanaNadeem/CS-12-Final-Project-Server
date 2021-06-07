@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/SuhanaNadeem/CS-12-Final-Project-Server#readme",
   "dependencies": {
+    "@google-cloud/speech": "^4.5.2",
     "@sendgrid/mail": "^7.2.1",
     "amazon-s3-uri": "^0.0.3",
     "apollo-server": "^2.16.1",
@@ -31,6 +32,7 @@
     "bcryptjs": "^2.4.3",
     "dotenv": "^8.2.0",
     "etherscan-api": "^10.0.5",
+    "fs": "^0.0.1-security",
     "graphql": "^15.5.0",
     "graphql-iso-date": "^3.6.1",
     "heroku": "^7.42.4",

@@ -76,8 +76,9 @@ module.exports = gql`
     deleteCsFile(fileKey: String!): String!
 
     # uploadRecordedFile(audioUri: String!): String!
-    # # TODO: configure this properly so you can pass in URI to upload (ignore above function for now)
 
     addS3RecordingUrl(s3RecordingUrl: String!, userId: String!): [String]
+
+    transcribeAudioChunk(s3AudioChunkUrl: String!): String!
   }
 `;

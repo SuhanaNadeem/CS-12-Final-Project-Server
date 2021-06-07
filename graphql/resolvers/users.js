@@ -1,16 +1,22 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { UserInputError } = require("apollo-server");
+const { UserInputError, AuthenticationError } = require("apollo-server");
+
+const SECRET_KEY = process.env.SECRET_USER_KEY;
 
 const {
   validateUserRegisterInput,
   validateUserLoginInput,
 } = require("../../util/validators");
-const SECRET_KEY = process.env.SECRET_USER_KEY;
 const User = require("../../models/User");
 
 const checkAdminAuth = require("../../util/checkAdminAuth");
 const checkUserAuth = require("../../util/checkUserAuth");
+
+const speech = require("@google-cloud/speech");
+const fs = require("fs");
+
+const { getCsFile } = require("../../util/handleFileUpload");
 
 function generateToken(user) {
   return jwt.sign(
@@ -27,7 +33,7 @@ module.exports = {
   Query: {
     async getUsers(_, {}, context) {
       try {
-        const user = checkUserAuth(context);
+        checkUserAuth(context);
       } catch (error) {
         throw new AuthenticationError();
       }
@@ -45,15 +51,13 @@ module.exports = {
     },
     async getUserById(_, { userId }, context) {
       console.log("comes in here in getUserById");
+
       try {
-        var admin = checkAdminAuth(context);
+        checkUserAuth(context);
       } catch (error) {
-        try {
-          var user = checkUserAuth(context);
-        } catch (error) {
-          throw new Error(error);
-        }
+        throw new Error(error);
       }
+
       const targetUser = await User.findById(userId);
       if (!targetUser) {
         throw new UserInputError("No such user", {
@@ -151,15 +155,13 @@ module.exports = {
 
     async addS3RecordingUrl(_, { s3RecordingUrl, userId }, context) {
       console.log("Enters s3 recording");
+
       try {
-        var admin = checkAdminAuth(context);
+        checkUserAuth(context);
       } catch (error) {
-        try {
-          var user = checkUserAuth(context);
-        } catch (error) {
-          throw new Error(error);
-        }
+        throw new Error(error);
       }
+
       const targetUser = await User.findById(userId);
       if (!targetUser) {
         throw new UserInputError("Invalid user id");
@@ -171,6 +173,46 @@ module.exports = {
       console.log(targetUser.s3RecordingUrls);
 
       return targetUser.s3RecordingUrls;
+    },
+
+    async transcribeAudioChunk(_, { s3AudioChunkUrl }, context) {
+      console.log("Enters transcribeAudioChunk...");
+
+      try {
+        checkUserAuth(context);
+      } catch (error) {
+        throw new Error(error);
+      }
+
+      const client = new speech.SpeechClient();
+      console.log("now");
+
+      // const file = fs.readFileSync(s3AudioChunkUrl);
+      // const audioBytes = file.toString("base64");
+
+      const file = getCsFile(s3AudioChunkUrl);
+      const audioBytes = file.toString("base64");
+
+      const audio = {
+        content: audioBytes,
+      };
+      const config = {
+        encoding: "LINEAR16",
+        // sampleRateHertz: 1600,
+        languageCode: "en-US",
+      };
+      const request = {
+        audio: audio,
+        config: config,
+      };
+
+      const [response] = await client.recognize(request);
+      const transcription = response.results
+        .map((result) => result.alternatives[0].transcript)
+        .join("\n");
+      console.log(`Transcription: ${transcription}`);
+
+      return transcription;
     },
   },
 };

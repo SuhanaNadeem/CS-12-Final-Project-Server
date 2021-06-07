@@ -88,6 +88,21 @@ async function handleCsFileDelete(fileKey) {
 }
 module.exports.handleCsFileDelete = handleCsFileDelete;
 
+async function getCsFile(fileKey) {
+  return s3.getObject(
+    {
+      Bucket: process.env.S3_CS_BUCKET,
+      Key: fileKey,
+    },
+    (err, data) => {
+      if (err) {
+        console.log(err);
+      }
+    }
+  );
+}
+module.exports.getCsFile = getCsFile;
+
 function getContentTypeByFile(fileName) {
   var rc = { type: "image/jpeg", extension: ".jpeg" };
   var fn = fileName.toLowerCase();
