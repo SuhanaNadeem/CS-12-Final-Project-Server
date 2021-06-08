@@ -10,7 +10,24 @@ const fs = require("fs");
 const { getCsFile } = require("../../util/handleAWSFiles");
 
 module.exports = {
-  Query: {},
+  Query: {
+    async getEventRecordingState(_, { userId }, context) {
+      try {
+        checkUserAuth(context);
+      } catch (error) {
+        throw new AuthenticationError();
+      }
+      const targetUser = await User.findById(userId);
+
+      if (!targetUser) {
+        throw new UserInputError("Invalid user ID");
+      }
+
+      const eventRecordingState = targetUser.eventRecordingState;
+
+      return eventRecordingState;
+    },
+  },
   Mutation: {
     async addS3RecordingUrl(_, { s3RecordingUrl, userId }, context) {
       console.log("Enters s3 recording");
@@ -42,6 +59,10 @@ module.exports = {
         throw new AuthenticationError(error);
       }
       const test = getCsFile(s3AudioChunkUrl);
+      console.log(
+        "*****************************************************************"
+      );
+      console.log("new test: ");
       console.log(test);
 
       // const client = new speech.SpeechClient();
@@ -75,6 +96,32 @@ module.exports = {
       // return transcription;
 
       return "enters";
+    },
+
+    async triggerEventRecording(_, { userId }, context) {
+      console.log("Enters triggerEventRecording");
+
+      try {
+        checkUserAuth(context);
+      } catch (error) {
+        throw new AuthenticationError(error);
+      }
+
+      const targetUser = await User.findById(userId);
+      if (!targetUser) {
+        throw new UserInputError("Invalid user id");
+      }
+
+      targetUser.eventRecordingState =
+        targetUser.eventRecordingState === undefined ||
+        targetUser.eventRecordingState === false
+          ? true
+          : false;
+      await targetUser.save();
+
+      return targetUser.eventRecordingState === true
+        ? "Start recording"
+        : "Stop recording";
     },
   },
 };

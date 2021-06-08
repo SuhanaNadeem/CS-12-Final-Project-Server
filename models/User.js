@@ -13,6 +13,10 @@ const userSchema = new Schema({
   email: String,
   s3RecordingUrls: [String],
   createdAt: Date,
+  startKey: String,
+  panicKey: String,
+  stopKey: String,
+  eventRecordingStatus: Boolean,
 });
 
 module.exports = model("User", userSchema);
