@@ -1,6 +1,6 @@
 const adminResolvers = require("./admins");
 const userResolvers = require("./users");
-const audioResolvers = require("./recordings");
+const recordingResolvers = require("./recordings");
 const keyResolvers = require("./keys");
 
 const { GraphQLDateTime } = require("graphql-iso-date");
@@ -10,13 +10,13 @@ module.exports = {
   Query: {
     ...adminResolvers.Query,
     ...userResolvers.Query,
-    ...audioResolvers.Query,
+    ...recordingResolvers.Query,
     ...keyResolvers.Query,
   },
   Mutation: {
     ...adminResolvers.Mutation,
     ...userResolvers.Mutation,
-    ...audioResolvers.Mutation,
+    ...recordingResolvers.Mutation,
     ...keyResolvers.Mutation,
   },
 };

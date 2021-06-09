@@ -14,13 +14,13 @@ module.exports = {
       } catch (error) {
         throw new AuthenticationError(error);
       }
-
       const targetUser = await User.findById(userId);
       if (!targetUser) {
         throw new UserInputError("Invalid user ID");
       }
+
       if (
-        (!targetUser.panicKey &&
+        (targetUser.panicKey &&
           startKey.toLowerCase().trim() ===
             targetUser.panicKey.toLowerCase().trim()) ||
         (targetUser.stopKey &&
@@ -32,6 +32,7 @@ module.exports = {
       await targetUser.save();
       return "Successfully set start key as " + targetUser.startKey;
     },
+
     async setStopKey(_, { userId, stopKey }, context) {
       console.log("Enters setStopKey");
 
@@ -46,7 +47,7 @@ module.exports = {
         throw new UserInputError("Invalid user ID");
       }
       if (
-        (!targetUser.panicKey &&
+        (targetUser.panicKey &&
           stopKey.toLowerCase().trim() ===
             targetUser.panicKey.toLowerCase().trim()) ||
         (targetUser.startKey &&
@@ -74,7 +75,7 @@ module.exports = {
         throw new UserInputError("Invalid user ID");
       }
       if (
-        (!targetUser.startKey &&
+        (targetUser.startKey &&
           panicKey.toLowerCase().trim() ===
             targetUser.startKey.toLowerCase().trim()) ||
         (targetUser.stopKey &&

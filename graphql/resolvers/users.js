@@ -109,7 +109,7 @@ module.exports = {
     async loginUser(_, { email, password }, context) {
       console.log("Enters log in user");
 
-      const { errors, valid } = validateUserLoginInput(email, password);
+      const { errors } = validateUserLoginInput(email, password);
 
       const user = await User.findOne({ email });
 
@@ -152,6 +152,5 @@ module.exports = {
         throw new UserInputError("Invalid input");
       }
     },
-
   },
 };

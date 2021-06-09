@@ -83,8 +83,6 @@ module.exports = gql`
     setStartKey(userId: String!, startKey: String!): String # Start recording manually
     setPanicKey(userId: String!, panicKey: String!): String # Panic: stop recording, "send" the recording, call
     setStopKey(userId: String!, stopKey: String!): String # Stop the recording (other option is button)
-    toggleEventRecording(userId: String!): String
-
     # TODO need another button to start and stop - show that
     # TODO stop stream if recording is on
     # TODO make a page to set all the keys using these mutations
@@ -94,9 +92,11 @@ module.exports = gql`
     uploadCsFile(file: Upload!): S3Object!
     deleteCsFile(fileKey: String!): String!
 
-    # uploadRecordedFile(audioUri: String!): String!
+    # TODO change s3RecordingUrl to s3EventRecordingUrl and audioChunk to interimRecording
 
     addS3RecordingUrl(s3RecordingUrl: String!, userId: String!): [String]
     transcribeAudioChunk(s3AudioChunkUrl: String!, userId: String!): String!
+
+    toggleEventRecordingState(userId: String!): String
   }
 `;

@@ -51,8 +51,10 @@ module.exports = {
     },
 
     async transcribeAudioChunk(_, { s3AudioChunkUrl, userId }, context) {
+      console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
       console.log("Enters transcribeAudioChunk...");
-
+      console.log(s3AudioChunkUrl);
+      console.log(userId);
       try {
         checkUserAuth(context);
       } catch (error) {
@@ -98,8 +100,8 @@ module.exports = {
       return "enters";
     },
 
-    async triggerEventRecording(_, { userId }, context) {
-      console.log("Enters triggerEventRecording");
+    async toggleEventRecordingState(_, { userId }, context) {
+      console.log("Enters toggleEventRecordingState");
 
       try {
         checkUserAuth(context);
@@ -119,9 +121,7 @@ module.exports = {
           : false;
       await targetUser.save();
 
-      return targetUser.eventRecordingState === true
-        ? "Start recording"
-        : "Stop recording";
+      return targetUser.eventRecordingState;
     },
   },
 };
