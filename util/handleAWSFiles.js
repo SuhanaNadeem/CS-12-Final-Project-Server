@@ -89,17 +89,7 @@ async function handleCsFileDelete(fileKey) {
 module.exports.handleCsFileDelete = handleCsFileDelete;
 
 async function getCsFile(fileKey) {
-  // return s3.getObject(
-  //   {
-  //     Bucket: process.env.S3_CS_BUCKET,
-  //     Key: fileKey,
-  //   },
-  //   (err, data) => {
-  //     if (err) {
-  //       console.log(err);
-  //     }
-  //   }
-  // );
+  console.log("entered");
   return new Promise((resolve, reject) => {
     s3.getObject(
       {
@@ -108,8 +98,12 @@ async function getCsFile(fileKey) {
       },
       (err, data) => {
         if (err) {
+          console.log(1);
+          console.log(err);
           reject(err);
         } else {
+          console.log(2);
+          console.log(2);
           resolve(data);
         }
       }

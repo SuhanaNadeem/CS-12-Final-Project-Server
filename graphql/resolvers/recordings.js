@@ -6,8 +6,9 @@ const checkUserAuth = require("../../util/checkUserAuth");
 
 const speech = require("@google-cloud/speech");
 const fs = require("fs");
+const AmazonS3URI = require("amazon-s3-uri");
 
-const { getCsFile } = require("../../util/handleAWSFiles");
+const { getCsFile, doesS3URLExist } = require("../../util/handleAWSFiles");
 
 module.exports = {
   Query: {
@@ -60,44 +61,40 @@ module.exports = {
       } catch (error) {
         throw new AuthenticationError(error);
       }
-      const test = getCsFile(s3AudioChunkUrl);
-      console.log(
-        "*****************************************************************"
-      );
-      console.log("new test: ");
-      console.log(test);
+      const { region, bucket, key } = AmazonS3URI(s3AudioChunkUrl);
+      console.log(key);
 
-      // const client = new speech.SpeechClient();
+      const client = new speech.SpeechClient();
       // console.log("now");
 
-      // const file = fs.readFileSync(s3AudioChunkUrl);
-      // const audioBytes = file.toString("base64");
+      const file = await getCsFile(key);
+      const audioBytes = file.Body.toString("base64");
 
       // //   const file = getCsFile(s3AudioChunkUrl);
       // //   const audioBytes = file.toString("base64");
 
-      // const audio = {
-      //   content: audioBytes,
-      // };
-      // const config = {
-      //   encoding: "LINEAR16",
-      //   // sampleRateHertz: 1600,
-      //   languageCode: "en-US",
-      // };
-      // const request = {
-      //   audio: audio,
-      //   config: config,
-      // };
+      const audio = {
+        content: audioBytes,
+      };
+      const config = {
+        encoding: "LINEAR16",
+        sampleRateHertz: 8000,
+        languageCode: "en-US",
+      };
+      const request = {
+        audio: audio,
+        config: config,
+      };
 
-      // const [response] = await client.recognize(request);
-      // const transcription = response.results
-      //   .map((result) => result.alternatives[0].transcript)
-      //   .join("\n");
-      // console.log(`Transcription: ${transcription}`);
+      const [response] = await client.recognize(request);
+      const transcription = response.results
+        .map((result) => result.alternatives[0].transcript)
+        .join("\n");
+      console.log(`Transcription: ${transcription}`);
 
-      // return transcription;
+      return transcription;
 
-      return "enters";
+      // return "enters";
     },
 
     async toggleEventRecordingState(_, { userId }, context) {
