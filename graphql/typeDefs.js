@@ -48,6 +48,11 @@ module.exports = gql`
     Bucket: String!
   }
 
+  type flaggedPhrases {
+    policePhrases: [String]
+    thiefPhrases: [String]
+  }
+
   # retrieve information
   type Query {
     getAdmin: Admin!
@@ -95,8 +100,17 @@ module.exports = gql`
     # TODO change s3RecordingUrl to s3EventRecordingUrl and audioChunk to interimRecording
 
     addS3RecordingUrl(s3RecordingUrl: String!, userId: String!): [String]
-    transcribeAudioChunk(s3AudioChunkUrl: String!, userId: String!): String!
+    transcribeInterimRecording(
+      interimRecordingFileKey: String!
+      userId: String!
+    ): String!
 
     toggleEventRecordingState(userId: String!): String
+
+    #     1) call transcribeInterimRecording, store transcription
+    # 2) send transcription to handleAudioChunkMatching, return true or false (match or no match) - this function itself will call three functions for three diff checks: policeDetected, recordCallDetected (meaning user said "start recording"), and thiefDetected
+    # 3) if true, call another function to trigger start recording. either way, delete the s3 recording
+
+    matchTranscription(transcription: String!, userId: String!): Boolean!
   }
 `;

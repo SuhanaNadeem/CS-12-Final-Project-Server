@@ -51,47 +51,66 @@ module.exports = {
       return targetUser.s3RecordingUrls;
     },
 
-    async transcribeAudioChunk(_, { s3AudioChunkUrl, userId }, context) {
+    async transcribeInterimRecording(
+      _,
+      { interimRecordingFileKey, userId },
+      context
+    ) {
       console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-      console.log("Enters transcribeAudioChunk...");
-      console.log(s3AudioChunkUrl);
+      console.log("Enters transcribeInterimRecording...");
+      console.log(interimRecordingFileKey);
       console.log(userId);
       try {
         checkUserAuth(context);
       } catch (error) {
         throw new AuthenticationError(error);
       }
-      const { region, bucket, key } = AmazonS3URI(s3AudioChunkUrl);
-      console.log(key);
 
       const client = new speech.SpeechClient();
       // console.log("now");
-
-      const file = await getCsFile(key);
+      console.log(0.5);
+      const file = await getCsFile(interimRecordingFileKey);
+      console.log(1);
       const audioBytes = file.Body.toString("base64");
-
-      // //   const file = getCsFile(s3AudioChunkUrl);
+      console.log(2);
+      //TODO IDEA: add a profanity checker
+      // //   const file = getCsFile(interimRecordingFileKey);
       // //   const audioBytes = file.toString("base64");
 
+      // const file1 = fs.readFileSync(
+      //   "C:/Users/16475/Documents/CS 12 Final Project/CS-12-Final-Project-Server/util/3949-Tacc-Dr-31.wav"
+      // );
+
+      // const file2 = fs.readFileSync(
+      //   "C:/Users/16475/Documents/CS 12 Final Project/CS-12-Final-Project-Server/util/util_audio.raw.wav"
+      // );
+      // console.log(file2);
+
+      // const audioBytes1 = file1.toString("base64");
+      // console.log(3);
+      // const audioBytes2 = file2.toString("base64");
+      // console.log(4);
       const audio = {
         content: audioBytes,
       };
+
       const config = {
         encoding: "LINEAR16",
-        sampleRateHertz: 8000,
+        sampleRateHertz: 44100,
         languageCode: "en-US",
       };
       const request = {
         audio: audio,
         config: config,
       };
-
+      console.log("before");
       const [response] = await client.recognize(request);
       const transcription = response.results
         .map((result) => result.alternatives[0].transcript)
         .join("\n");
       console.log(`Transcription: ${transcription}`);
 
+      console.log("after");
       return transcription;
 
       // return "enters";

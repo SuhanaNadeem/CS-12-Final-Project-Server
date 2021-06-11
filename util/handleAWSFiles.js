@@ -89,7 +89,6 @@ async function handleCsFileDelete(fileKey) {
 module.exports.handleCsFileDelete = handleCsFileDelete;
 
 async function getCsFile(fileKey) {
-  console.log("entered");
   return new Promise((resolve, reject) => {
     s3.getObject(
       {
@@ -98,12 +97,9 @@ async function getCsFile(fileKey) {
       },
       (err, data) => {
         if (err) {
-          console.log(1);
           console.log(err);
           reject(err);
         } else {
-          console.log(2);
-          console.log(2);
           resolve(data);
         }
       }
@@ -112,35 +108,37 @@ async function getCsFile(fileKey) {
 }
 module.exports.getCsFile = getCsFile;
 
-function getContentTypeByFile(fileName) {
-  var rc = { type: "image/jpeg", extension: ".jpeg" };
-  var fn = fileName.toLowerCase();
+// function getContentTypeByFile(fileName) {
+//   var rc = { type: "image/jpeg", extension: ".jpeg" };
+//   var fn = fileName.toLowerCase();
 
-  if (fn.indexOf(".html") >= 0) {
-    rc.type = "text/html";
-    rc.extension = ".html";
-  } else if (fn.indexOf(".css") >= 0) {
-    rc.type = "text/css";
-    rc.extension = ".css";
-  } else if (fn.indexOf(".json") >= 0) {
-    rc.type = "application/json";
-    rc.extension = ".json";
-  } else if (fn.indexOf(".js") >= 0) {
-    rc.type = "application/x-javascript";
-    rc.extension = ".js";
-  } else if (fn.indexOf(".png") >= 0) {
-    rc.type = "image/png";
-    rc.extension = ".png";
-  } else if (fn.indexOf(".jpg") >= 0) {
-    rc.type = "image/jpg";
-    rc.extension = ".jpg";
-  } else if (fn.indexOf(".gif") >= 0) {
-    rc.type = "image/gif";
-    rc.type = ".gif";
-  } else if (fn.indexOf(".caf") >= 0) {
-    rc.type = "audio/caf";
-    rc.type = ".caf";
-  }
-
-  return rc;
-}
+//   if (fn.indexOf(".html") >= 0) {
+//     rc.type = "text/html";
+//     rc.extension = ".html";
+//   } else if (fn.indexOf(".css") >= 0) {
+//     rc.type = "text/css";
+//     rc.extension = ".css";
+//   } else if (fn.indexOf(".json") >= 0) {
+//     rc.type = "application/json";
+//     rc.extension = ".json";
+//   } else if (fn.indexOf(".js") >= 0) {
+//     rc.type = "application/x-javascript";
+//     rc.extension = ".js";
+//   } else if (fn.indexOf(".png") >= 0) {
+//     rc.type = "image/png";
+//     rc.extension = ".png";
+//   } else if (fn.indexOf(".jpg") >= 0) {
+//     rc.type = "image/jpg";
+//     rc.extension = ".jpg";
+//   } else if (fn.indexOf(".gif") >= 0) {
+//     rc.type = "image/gif";
+//     rc.type = ".gif";
+//   } else if (fn.indexOf(".caf") >= 0) {
+//     rc.type = "audio/caf";
+//     rc.type = ".caf";
+//   } else if (fn.indexOf(".wav") >= 0) {
+//     rc.type = "audio/wav";
+//     rc.type = ".wav";
+//   }
+//   return rc;
+// }
