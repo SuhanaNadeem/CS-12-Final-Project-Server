@@ -11,12 +11,12 @@ const userSchema = new Schema({
   name: String,
   password: String,
   email: String,
-  s3RecordingUrls: [String],
+  eventRecordingUrls: [String],
   createdAt: Date,
   startKey: String,
   panicKey: String,
   stopKey: String,
-  eventRecordingStatus: Boolean,
+  eventRecordingTriggered: Boolean,
 });
 
 module.exports = model("User", userSchema);

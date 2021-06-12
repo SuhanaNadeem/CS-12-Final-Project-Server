@@ -3,7 +3,7 @@ const { customAlphabet } = require("nanoid");
 
 const nanoid = customAlphabet("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ", 10);
 
-const flaggedPhrasesSchema = new Schema({
+const flaggedTokensSchema = new Schema({
   _id: {
     type: String,
     default: () => nanoid(),
@@ -13,4 +13,4 @@ const flaggedPhrasesSchema = new Schema({
   createdAt: Date,
 });
 
-module.exports = model("FlaggedPhrases", flaggedPhrasesSchema);
+module.exports = model("FlaggedTokens", flaggedTokensSchema);

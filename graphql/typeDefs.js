@@ -21,13 +21,13 @@ module.exports = gql`
     password: String!
     email: String!
 
-    s3RecordingUrls: [String]
+    eventRecordingUrls: [String]
 
     startKey: String
     panicKey: String
     stopKey: String
 
-    eventRecordingState: Boolean
+    eventRecordingTriggered: Boolean
 
     createdAt: DateTime!
     token: String
@@ -47,10 +47,14 @@ module.exports = gql`
     Key: String!
     Bucket: String!
   }
-
-  type flaggedPhrases {
-    policePhrases: [String]
-    thiefPhrases: [String]
+  # TODO understand this type... there are currently no objects of this type in the DB
+  # TODO create a createPoliceTokens mutation that takes a String like "arrest out hands stop"
+  # and creates a new FlaggedToken appropriately for each word in that phrase
+  # Do the same for createThiefTokens
+  # See signupUser.js for how to make an object of a type
+  type FlaggedToken {
+    name: String! # "Police" or "Thief"
+    token: String! # word or phrase
   }
 
   # retrieve information
@@ -62,7 +66,7 @@ module.exports = gql`
     getUsers: [User]!
     getUserById(userId: String!): User!
 
-    getEventRecordingState(userId: String!): Boolean!
+    getEventRecordingTriggered(userId: String!): Boolean!
   }
 
   # actions
@@ -88,28 +92,16 @@ module.exports = gql`
     setStartKey(userId: String!, startKey: String!): String # Start recording manually
     setPanicKey(userId: String!, panicKey: String!): String # Panic: stop recording, "send" the recording, call
     setStopKey(userId: String!, stopKey: String!): String # Stop the recording (other option is button)
-    # TODO need another button to start and stop - show that
-    # TODO stop stream if recording is on
-    # TODO make a page to set all the keys using these mutations
-    # TODO text a link to the recording and make a call?
-    # TODO share previously recorded audio file via text
-
     uploadCsFile(file: Upload!): S3Object!
     deleteCsFile(fileKey: String!): String!
 
-    # TODO change s3RecordingUrl to s3EventRecordingUrl and audioChunk to interimRecording
+    addEventRecordingUrl(eventRecordingUrl: String!, userId: String!): [String]
+    transcribeInterimRecording(interimRecordingFileKey: String!): String!
+    getEventRecordingUrl(eventRecordingUrl: String!, userId: String!): [String]
 
-    addS3RecordingUrl(s3RecordingUrl: String!, userId: String!): [String]
-    transcribeInterimRecording(
-      interimRecordingFileKey: String!
-      userId: String!
-    ): String!
+    detectDanger(interimRecordingFileKey: String, userId: String!): String!
 
-    toggleEventRecordingState(userId: String!): String
-
-    #     1) call transcribeInterimRecording, store transcription
-    # 2) send transcription to handleAudioChunkMatching, return true or false (match or no match) - this function itself will call three functions for three diff checks: policeDetected, recordCallDetected (meaning user said "start recording"), and thiefDetected
-    # 3) if true, call another function to trigger start recording. either way, delete the s3 recording
+    # toggleEventRecordingState(userId: String!): String
 
     matchTranscription(transcription: String!, userId: String!): Boolean!
   }
