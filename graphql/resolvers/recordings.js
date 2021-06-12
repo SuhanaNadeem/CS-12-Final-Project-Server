@@ -9,7 +9,7 @@ const fs = require("fs");
 const AmazonS3URI = require("amazon-s3-uri");
 
 const { getCsFile, doesS3URLExist } = require("../../util/handleAWSFiles");
-const FlaggedTokens = require("../../models/FlaggedTokens");
+const FlaggedToken = require("../../models/FlaggedToken");
 
 module.exports = {
   Query: {
