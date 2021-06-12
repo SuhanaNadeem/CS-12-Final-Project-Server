@@ -99,7 +99,7 @@ module.exports = gql`
     transcribeInterimRecording(interimRecordingFileKey: String!): String!
     getEventRecordingUrl(eventRecordingUrl: String!, userId: String!): [String]
 
-    detectDanger(interimRecordingFileKey: String, userId: String!): String!
+    detectDanger(interimRecordingFileKey: String, userId: String!): Boolean!
 
     # toggleEventRecordingState(userId: String!): String
 

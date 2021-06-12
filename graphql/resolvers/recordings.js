@@ -9,7 +9,7 @@ const fs = require("fs");
 const AmazonS3URI = require("amazon-s3-uri");
 
 const { getCsFile, doesS3URLExist } = require("../../util/handleAWSFiles");
-const FlaggedToken = require("../../models/FlaggedToken");
+const flaggedTokenResolvers = require("./flaggedTokens");
 
 module.exports = {
   Query: {
@@ -88,54 +88,40 @@ module.exports = {
 
       return transcription;
     },
-  },
 
-  async detectDanger(_, { interimRecordingFileKey, userId }, context) {
-    console.log(interimRecordingFileKey);
-    console.log(userId);
-    try {
-      checkUserAuth(context);
-    } catch (error) {
-      throw new AuthenticationError(error);
-    }
+    async detectDanger(_, { interimRecordingFileKey, userId }, context) {
+      console.log("detectdanger entered");
 
-    const targetUser = await User.getUserById(userId);
-    if (
-      !targetUser ||
-      !interimRecordingFileKey ||
-      interimRecordingFileKey === " "
-    ) {
-      throw new UserInputError("Invalid user ID or file key");
-    }
-    transcription = await module.exports.Mutation.transcribeInterimRecording(
-      _,
-      { interimRecordingFileKey },
-      context
-    );
-    console.log("Transcription");
-    console.log(transcription);
+      console.log(interimRecordingFileKey);
+      console.log(userId);
+      try {
+        checkUserAuth(context);
+      } catch (error) {
+        throw new AuthenticationError(error);
+      }
 
-    // TODO do the matching to figure out whether to start the event recording
-    var userTokens = transcription.split(" ");
-
-    userTokens = userTokens.filter((a) => a !== "is");
-    userTokens = userTokens.filter((a) => a !== "as");
-    userTokens = userTokens.filter((a) => a !== "this");
-    userTokens = userTokens.filter((a) => a !== "that");
-    userTokens = userTokens.filter((a) => a !== "the");
-    userTokens = userTokens.filter((a) => a !== "a");
-
-    // Get array of all tokens of a police and thief
-    const policeTokens = await FlaggedToken.find({ name: "Police" });
-    const thiefTokens = await FlaggedToken.find({ name: "Thief" });
-
-    if (targetUser.startKey && targetUser.startKey != "") {
-      // TODO match userTokens to startKey
-    } else if (policeTokens) {
-      // TODO match userTokens to policeTokens
-    } else if (thiefTokens) {
-      // TODO match userTokens to thiefTokens
-    }
-    return true; // temporary; return true if event was detected, false otherwise
+      const targetUser = await User.findById(userId);
+      if (
+        !targetUser ||
+        !interimRecordingFileKey ||
+        interimRecordingFileKey === " "
+      ) {
+        throw new UserInputError("Invalid user ID or file key");
+      }
+      const transcription =
+        await module.exports.Mutation.transcribeInterimRecording(
+          _,
+          { interimRecordingFileKey },
+          context
+        );
+      console.log("Transcription");
+      console.log(transcription);
+      const detected = await flaggedTokenResolvers.Mutation.matchTranscription(
+        _,
+        { transcription, userId },
+        context
+      );
+      return false;
+    },
   },
 };
