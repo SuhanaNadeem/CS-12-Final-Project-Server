@@ -95,14 +95,25 @@ module.exports = gql`
     uploadCsFile(file: Upload!): S3Object!
     deleteCsFile(fileKey: String!): String!
 
-    addEventRecordingUrl(eventRecordingUrl: String!, userId: String!): [String]
-    transcribeInterimRecording(interimRecordingFileKey: String!): String!
+    addEventRecordingUrl(
+      eventRecordingUrl: String!
+      previousEventRecordingUrl: String
+      userId: String!
+    ): [String]
+    transcribeRecording(recordingFileKey: String!): String!
     getEventRecordingUrl(eventRecordingUrl: String!, userId: String!): [String]
 
-    detectDanger(interimRecordingFileKey: String, userId: String!): Boolean!
+    detectDanger(interimRecordingFileKey: String, userId: String!): String!
+    handleDanger(
+      eventRecordingFileKey: String
+      userId: String!
+      previousEventRecordingUrl: String
+      eventRecordingUrl: String
+    ): String!
 
     # toggleEventRecordingState(userId: String!): String
 
-    matchTranscription(transcription: String!, userId: String!): Boolean!
+    matchStartTranscription(transcription: String!, userId: String!): String!
+    matchStopTranscription(transcription: String!, userId: String!): String!
   }
 `;
