@@ -100,10 +100,12 @@ module.exports = gql`
       previousEventRecordingUrl: String
       userId: String!
     ): [String]
-    transcribeRecording(recordingFileKey: String!): String!
+    transcribeEventRecording(recordingFileKey: String!): String!
+    transcribeInterimRecording(recordingBytes: String!): String!
+
     getEventRecordingUrl(eventRecordingUrl: String!, userId: String!): [String]
 
-    detectDanger(interimRecordingFileKey: String, userId: String!): String!
+    detectDanger(recordingBytes: String, userId: String!): String!
     handleDanger(
       eventRecordingFileKey: String
       userId: String!

@@ -55,7 +55,7 @@ module.exports = {
       if (previousEventRecordingUrl && previousEventRecordingUrl != "") {
         for (var eventRecordingUrlGroup of targetUser.eventRecordingUrls) {
           if (eventRecordingUrlGroup.includes(previousEventRecordingUrl)) {
-            console.log("adding to prev");
+            console.log("adding to group");
             eventRecordingUrlGroup.push(eventRecordingUrl);
             break;
           }
@@ -71,8 +71,8 @@ module.exports = {
       return eventRecordingUrlGroup;
     },
 
-    async transcribeRecording(_, { recordingFileKey }, context) {
-      console.log("entered transcribe");
+    async transcribeEventRecording(_, { recordingFileKey }, context) {
+      console.log("entered event transcribe");
       try {
         checkUserAuth(context);
       } catch (error) {
@@ -82,10 +82,10 @@ module.exports = {
 
       const file = await getCsFile(recordingFileKey);
 
-      const audioBytes = file.Body.toString("base64");
+      const recordingBytes = file.Body.toString("base64");
 
       const audio = {
-        content: audioBytes,
+        content: recordingBytes,
       };
 
       const config = {
@@ -108,16 +108,47 @@ module.exports = {
       return transcription;
     },
 
-    async detectDanger(_, { interimRecordingFileKey, userId }, context) {
+    async transcribeInterimRecording(_, { recordingBytes }, context) {
+      console.log("entered interim transcribe");
+      try {
+        checkUserAuth(context);
+      } catch (error) {
+        throw new AuthenticationError(error);
+      }
+      const client = new speech.SpeechClient();
+
+      const audio = {
+        content: recordingBytes,
+      };
+
+      const config = {
+        encoding: "LINEAR16",
+        sampleRateHertz: 44100,
+        languageCode: "en-US",
+      };
+
+      const request = {
+        audio: audio,
+        config: config,
+      };
+
+      const [response] = await client.recognize(request);
+      const transcription = response.results
+        .map((result) => result.alternatives[0].transcript)
+        .join("\n");
+      console.log(`Transcription: ${transcription}`);
+
+      return transcription;
+    },
+
+    async detectDanger(_, { recordingBytes, userId }, context) {
       console.log();
       console.log(
         "****************************************************************"
       );
 
       console.log("detectdanger entered");
-      console.log();
-      console.log(interimRecordingFileKey);
-      console.log(userId);
+
       try {
         checkUserAuth(context);
       } catch (error) {
@@ -125,18 +156,15 @@ module.exports = {
       }
 
       const targetUser = await User.findById(userId);
-      if (
-        !targetUser ||
-        !interimRecordingFileKey ||
-        interimRecordingFileKey === " "
-      ) {
+      if (!targetUser || !recordingBytes || recordingBytes === "") {
         throw new UserInputError("Invalid user ID or file key");
       }
-      const transcription = await module.exports.Mutation.transcribeRecording(
-        _,
-        { recordingFileKey: interimRecordingFileKey },
-        context
-      );
+      const transcription =
+        await module.exports.Mutation.transcribeInterimRecording(
+          _,
+          { recordingBytes },
+          context
+        );
       console.log("Transcription");
       console.log(transcription);
       const detectedStatus =
@@ -145,9 +173,6 @@ module.exports = {
           { transcription, userId },
           context
         );
-
-      await handleCsFileDelete(interimRecordingFileKey);
-      console.log("deleted");
 
       console.log();
       console.log(
@@ -188,15 +213,16 @@ module.exports = {
       if (
         !targetUser ||
         !eventRecordingFileKey ||
-        eventRecordingFileKey === " "
+        eventRecordingFileKey === ""
       ) {
         throw new UserInputError("Invalid user ID or file key");
       }
-      const transcription = await module.exports.Mutation.transcribeRecording(
-        _,
-        { recordingFileKey: eventRecordingFileKey },
-        context
-      );
+      const transcription =
+        await module.exports.Mutation.transcribeEventRecording(
+          _,
+          { recordingFileKey: eventRecordingFileKey },
+          context
+        );
 
       console.log("Transcription");
       console.log(transcription);
