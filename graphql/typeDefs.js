@@ -125,5 +125,8 @@ module.exports = gql`
 
     matchStartTranscription(transcription: String!, userId: String!): String!
     matchStopTranscription(transcription: String!, userId: String!): String!
+
+    createPoliceTokens(tokens: String!): [String]
+    createThiefTokens(tokens: String!): [String]
   }
 `;
