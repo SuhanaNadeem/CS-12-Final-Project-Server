@@ -7,7 +7,7 @@ const FlaggedToken = require("../../models/FlaggedToken");
 module.exports = {
   Query: {},
   Mutation: {
-    async matchTranscription(_, { transcription, userId }, context) {
+    async matchStopTranscription(_, { transcription, userId }, context) {
       console.log("matchTranscription entered");
 
       try {
@@ -19,72 +19,54 @@ module.exports = {
       if (!targetUser) {
         throw new UserInputError("Invalid user ID");
       }
-      
-      var userTokens = transcription.toLowerCase();
 
-      // userTokens = userTokens.filter((a) => a !== "is");
-      // userTokens = userTokens.filter((a) => a !== "as");
-      // userTokens = userTokens.filter((a) => a !== "this");
-      // userTokens = userTokens.filter((a) => a !== "that");
-      // userTokens = userTokens.filter((a) => a !== "the");
-      // userTokens = userTokens.filter((a) => a !== "a");
+      var userTokens = transcription.split(" ");
 
-      // Get array of all tokens of a police and thief
-      const policeTokens = await FlaggedToken.find({ name: "Police" });
-      const thiefTokens = await FlaggedToken.find({ name: "Thief" });
-      console.log(thiefTokens);
-
-      if (targetUser.startKey && targetUser.startKey != "" && userTokens.includes(targetUser.startKey)) {
-        return true;
-      }
-      if (policeTokens) {
-        for (var policeToken of policeTokens) {
-          console.log(policeToken);
-          if (userTokens.includes(policeToken.token)) {
-            return true;
-          }
-        }
-      }
-      if (thiefTokens) {
-        for (var thiefToken of thiefTokens) {
-          console.log(thiefToken);
-          if (userTokens.includes(thiefToken.token)) {
-            return true;
-          }
-        }
+      var detected = "start";
+      if (userTokens.includes("stop") || userTokens.includes("Stop")) {
+        detected = "stop";
+      } else if (userTokens.includes("panic") || userTokens.includes("Panic")) {
+        detected = "panic";
       }
 
-      return false;
+      return detected;
     },
+    async matchStartTranscription(_, { transcription, userId }, context) {
+      console.log("matchTranscription entered");
 
-    async createPoliceTokens(_, { tokens }, context) {
-      console.log("createPoliceTokens entered");
-      var tokenArray = tokens.split("&");
-      for (var t of tokenArray) {
-        console.log(t);
-        const newPoliceToken = new FlaggedToken({
-          name: "Police",
-          token: t
-        });
-        const res = await newPoliceToken.save();
+      try {
+        checkUserAuth(context);
+      } catch (error) {
+        throw new AuthenticationError(error);
+      }
+      const targetUser = await User.findById(userId);
+      if (!targetUser) {
+        throw new UserInputError("Invalid user ID");
+      }
+      var userTokens = transcription.split(" ");
+
+      var userTokens = transcription.split(" ");
+
+      var detected = "stop";
+      if (userTokens.includes("start") || userTokens.includes("Start")) {
+        detected = "start";
+      } else if (
+        userTokens.includes("police") ||
+        userTokens.includes("Police")
+      ) {
+        detected = "start";
+      } else if (userTokens.includes("thief") || userTokens.includes("Thief")) {
+        detected = "start";
+      } else if (
+        userTokens.includes("f***") ||
+        userTokens.includes("s***") ||
+        userTokens.includes("b*****")
+      ) {
+        // Add more profane words above?
+        detected = "start";
       }
 
-      return tokenArray;
-    },
-
-    async createThiefTokens(_, { tokens }, context) {
-      console.log("createThiefTokens entered");
-      var tokenArray = tokens.split("&");
-      for (var t of tokenArray) {
-        console.log(t);
-        const newThiefToken = new FlaggedToken({
-          name: "Thief",
-          token: t
-        });
-        const res = await newThiefToken.save();
-      }
-
-      return tokenArray;
+      return detected;
     },
   },
 };
