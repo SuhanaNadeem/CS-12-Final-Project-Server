@@ -121,7 +121,7 @@ module.exports = {
         { transcription, userId },
         context
       );
-      return false;
+      return detected;
     },
   },
 };

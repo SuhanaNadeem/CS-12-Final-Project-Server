@@ -19,29 +19,72 @@ module.exports = {
       if (!targetUser) {
         throw new UserInputError("Invalid user ID");
       }
-      // TODO do the matching to figure out whether to start the event recording
-      var userTokens = transcription.split(" ");
+      
+      var userTokens = transcription.toLowerCase();
 
-      userTokens = userTokens.filter((a) => a !== "is");
-      userTokens = userTokens.filter((a) => a !== "as");
-      userTokens = userTokens.filter((a) => a !== "this");
-      userTokens = userTokens.filter((a) => a !== "that");
-      userTokens = userTokens.filter((a) => a !== "the");
-      userTokens = userTokens.filter((a) => a !== "a");
+      // userTokens = userTokens.filter((a) => a !== "is");
+      // userTokens = userTokens.filter((a) => a !== "as");
+      // userTokens = userTokens.filter((a) => a !== "this");
+      // userTokens = userTokens.filter((a) => a !== "that");
+      // userTokens = userTokens.filter((a) => a !== "the");
+      // userTokens = userTokens.filter((a) => a !== "a");
 
       // Get array of all tokens of a police and thief
       const policeTokens = await FlaggedToken.find({ name: "Police" });
       const thiefTokens = await FlaggedToken.find({ name: "Thief" });
+      console.log(thiefTokens);
 
-      if (targetUser.startKey && targetUser.startKey != "") {
-        // TODO match userTokens to startKey
-      } else if (policeTokens) {
-        // TODO match userTokens to policeTokens
-      } else if (thiefTokens) {
-        // TODO match userTokens to thiefTokens
+      if (targetUser.startKey && targetUser.startKey != "" && userTokens.includes(targetUser.startKey)) {
+        return true;
+      }
+      if (policeTokens) {
+        for (var policeToken of policeTokens) {
+          console.log(policeToken);
+          if (userTokens.includes(policeToken.token)) {
+            return true;
+          }
+        }
+      }
+      if (thiefTokens) {
+        for (var thiefToken of thiefTokens) {
+          console.log(thiefToken);
+          if (userTokens.includes(thiefToken.token)) {
+            return true;
+          }
+        }
       }
 
-      return true; // temporary; return true if event was detected, false otherwise
+      return false;
+    },
+
+    async createPoliceTokens(_, { tokens }, context) {
+      console.log("createPoliceTokens entered");
+      var tokenArray = tokens.split("&");
+      for (var t of tokenArray) {
+        console.log(t);
+        const newPoliceToken = new FlaggedToken({
+          name: "Police",
+          token: t
+        });
+        const res = await newPoliceToken.save();
+      }
+
+      return tokenArray;
+    },
+
+    async createThiefTokens(_, { tokens }, context) {
+      console.log("createThiefTokens entered");
+      var tokenArray = tokens.split("&");
+      for (var t of tokenArray) {
+        console.log(t);
+        const newThiefToken = new FlaggedToken({
+          name: "Thief",
+          token: t
+        });
+        const res = await newThiefToken.save();
+      }
+
+      return tokenArray;
     },
   },
 };

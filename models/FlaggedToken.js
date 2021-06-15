@@ -8,8 +8,8 @@ const flaggedTokenSchema = new Schema({
     type: String,
     default: () => nanoid(),
   },
-  policePhrases: [String],
-  thiefPhrases: [String],
+  name: String,
+  token: String,
   createdAt: Date,
 });
 

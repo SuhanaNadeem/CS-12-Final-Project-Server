@@ -104,5 +104,8 @@ module.exports = gql`
     # toggleEventRecordingState(userId: String!): String
 
     matchTranscription(transcription: String!, userId: String!): Boolean!
+
+    createPoliceTokens(tokens: String!): [String]
+    createThiefTokens(tokens: String!): [String]
   }
 `;
