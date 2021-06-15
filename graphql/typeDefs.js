@@ -21,13 +21,9 @@ module.exports = gql`
     password: String!
     email: String!
 
-    eventRecordingUrls: [String]
-
     startKey: String
     panicKey: String
     stopKey: String
-
-    eventRecordingTriggered: Boolean
 
     createdAt: DateTime!
     token: String
@@ -48,13 +44,21 @@ module.exports = gql`
     Bucket: String!
   }
   # TODO understand this type... there are currently no objects of this type in the DB
-  # TODO create a createPoliceTokens mutation that takes a String like "arrest out hands stop"
-  # and creates a new FlaggedToken appropriately for each word in that phrase
+  # TODO create a createPoliceTokens mutation that takes a String like "'arrest' 'get out' 'hands up'"
+  # and creates a new FlaggedToken appropriately for each word/phrase enclosed in '' in that phrase
   # Do the same for createThiefTokens
-  # See signupUser.js for how to make an object of a type
+  # See signupUser in users.js for how to make an object of a type
   type FlaggedToken {
     name: String! # "Police" or "Thief"
     token: String! # word or phrase
+  }
+
+  # The chunks of audio that make up an event are grouped here
+  type EventRecording {
+    id: String!
+    eventRecordingUrls: [String]
+    userId: String!
+    finished: Boolean!
   }
 
   # retrieve information
@@ -66,7 +70,7 @@ module.exports = gql`
     getUsers: [User]!
     getUserById(userId: String!): User!
 
-    getEventRecordingTriggered(userId: String!): Boolean!
+    # getEventRecordingTriggered(userId: String!): Boolean!
   }
 
   # actions
@@ -95,25 +99,29 @@ module.exports = gql`
     uploadCsFile(file: Upload!): S3Object!
     deleteCsFile(fileKey: String!): String!
 
+    # Add url to EventRecording object
     addEventRecordingUrl(
       eventRecordingUrl: String!
-      previousEventRecordingUrl: String
       userId: String!
+      finish: Boolean!
     ): [String]
-    transcribeEventRecording(recordingFileKey: String!): String!
-    transcribeInterimRecording(recordingBytes: String!): String!
+    # transcribeEventRecording(recordingFileKey: String!): String!
+    transcribeRecording(recordingBytes: String!): String!
 
-    getEventRecordingUrl(eventRecordingUrl: String!, userId: String!): [String]
+    # getEventRecordingUrl(eventRecordingUrl: String!, userId: String!): [String]
 
     detectDanger(recordingBytes: String, userId: String!): String!
     handleDanger(
-      eventRecordingFileKey: String
+      recordingBytes: String
       userId: String!
-      previousEventRecordingUrl: String
       eventRecordingUrl: String
     ): String!
 
-    # toggleEventRecordingState(userId: String!): String
+    # createEventRecording(
+    #   newUserId: String!
+    #   newEventRecordingUrls: [String]
+    #   finished: Boolean
+    # ): String
 
     matchStartTranscription(transcription: String!, userId: String!): String!
     matchStopTranscription(transcription: String!, userId: String!): String!

@@ -11,12 +11,10 @@ const userSchema = new Schema({
   name: String,
   password: String,
   email: String,
-  eventRecordingUrls: [[String]],
   createdAt: Date,
   startKey: String,
   panicKey: String,
   stopKey: String,
-  eventRecordingTriggered: Boolean,
 });
 
 module.exports = model("User", userSchema);

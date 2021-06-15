@@ -19,6 +19,7 @@ module.exports = {
       if (!targetUser) {
         throw new UserInputError("Invalid user ID");
       }
+
       var userTokens = transcription.split(" ");
 
       var detected = "start";
@@ -56,7 +57,15 @@ module.exports = {
         detected = "start";
       } else if (userTokens.includes("thief") || userTokens.includes("Thief")) {
         detected = "start";
+      } else if (
+        userTokens.includes("f***") ||
+        userTokens.includes("s***") ||
+        userTokens.includes("b*****")
+      ) {
+        // Add more profane words above?
+        detected = "start";
       }
+
       return detected;
     },
   },

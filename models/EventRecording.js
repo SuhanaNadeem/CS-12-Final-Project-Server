@@ -3,14 +3,15 @@ const { customAlphabet } = require("nanoid");
 
 const nanoid = customAlphabet("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ", 10);
 
-const flaggedTokenSchema = new Schema({
+const eventRecordingSchema = new Schema({
   _id: {
     type: String,
     default: () => nanoid(),
   },
-  name: String,
-  token: String,
+  eventRecordingUrls: [String],
+  userId: String,
+  finished: Boolean,
   createdAt: Date,
 });
 
-module.exports = model("FlaggedToken", flaggedTokenSchema);
+module.exports = model("EventRecording", eventRecordingSchema);

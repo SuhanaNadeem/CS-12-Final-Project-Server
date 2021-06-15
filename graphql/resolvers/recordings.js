@@ -1,12 +1,11 @@
 const { UserInputError, AuthenticationError } = require("apollo-server");
 
 const User = require("../../models/User");
+const EventRecording = require("../../models/EventRecording");
 
 const checkUserAuth = require("../../util/checkUserAuth");
 
 const speech = require("@google-cloud/speech");
-const fs = require("fs");
-const AmazonS3URI = require("amazon-s3-uri");
 
 const {
   getCsFile,
@@ -17,27 +16,24 @@ const flaggedTokenResolvers = require("./flaggedTokens");
 
 module.exports = {
   Query: {
-    async getEventRecordingTriggered(_, { userId }, context) {
-      try {
-        checkUserAuth(context);
-      } catch (error) {
-        throw new AuthenticationError();
-      }
-      const targetUser = await User.findById(userId);
-
-      if (!targetUser) {
-        throw new UserInputError("Invalid user ID");
-      }
-
-      const eventRecordingTriggered = targetUser.eventRecordingTriggered;
-
-      return eventRecordingTriggered;
-    },
+    // async getEventRecordingTriggered(_, { userId }, context) {
+    //   try {
+    //     checkUserAuth(context);
+    //   } catch (error) {
+    //     throw new AuthenticationError();
+    //   }
+    //   const targetUser = await User.findById(userId);
+    //   if (!targetUser) {
+    //     throw new UserInputError("Invalid user ID");
+    //   }
+    //   const eventRecordingTriggered = targetUser.eventRecordingTriggered;
+    //   return eventRecordingTriggered;
+    // },
   },
   Mutation: {
     async addEventRecordingUrl(
       _,
-      { eventRecordingUrl, previousEventRecordingUrl, userId },
+      { eventRecordingUrl, userId, finish },
       context
     ) {
       console.log("addEventRecordingUrl entered");
@@ -52,63 +48,95 @@ module.exports = {
       if (!targetUser) {
         throw new UserInputError("Invalid user id");
       }
-      if (previousEventRecordingUrl && previousEventRecordingUrl != "") {
-        for (var eventRecordingUrlGroup of targetUser.eventRecordingUrls) {
-          if (eventRecordingUrlGroup.includes(previousEventRecordingUrl)) {
-            console.log("adding to group");
-            eventRecordingUrlGroup.push(eventRecordingUrl);
-            break;
-          }
+
+      const targetEventRecording = await EventRecording.findOne({
+        finished: false,
+        userId,
+      });
+
+      if (finish) {
+        if (targetEventRecording) {
+          // Detected "stop" or "panic" and has >0 associated recordings
+          console.log(1);
+          targetEventRecording.eventRecordingUrls.push(eventRecordingUrl);
+          targetEventRecording.finished = true;
+          await targetEventRecording.save();
+
+          return targetEventRecording.eventRecordingUrls;
+        } else {
+          console.log(2);
+          // Detected "stop" or "panic" and has 0 associated recordings
+          const newEventRecording = new EventRecording({
+            eventRecordingUrls: [],
+            finished: true,
+            userId,
+            createdAt: new Date(),
+          });
+          newEventRecording.eventRecordingUrls.push(eventRecordingUrl);
+          await newEventRecording.save();
+          return newEventRecording.eventRecordingUrls;
         }
       } else {
-        console.log("adding to new");
-        eventRecordingUrlGroup = [];
-        eventRecordingUrlGroup.push(eventRecordingUrl);
-        targetUser.eventRecordingUrls.push(eventRecordingUrlGroup);
+        if (targetEventRecording) {
+          console.log(3);
+          // Detected "start" and has >0 associated recordings
+          targetEventRecording.eventRecordingUrls.push(eventRecordingUrl);
+          await targetEventRecording.save();
+          return targetEventRecording.eventRecordingUrls;
+        } else {
+          console.log(4);
+          // Detected "start" and has 0 associated recordings
+          const newEventRecording = new EventRecording({
+            eventRecordingUrls: [],
+            finished: false,
+            userId,
+            createdAt: new Date(),
+          });
+          newEventRecording.eventRecordingUrls.push(eventRecordingUrl);
+          await newEventRecording.save();
+          return newEventRecording.eventRecordingUrls;
+        }
       }
-      await targetUser.save();
-
-      return eventRecordingUrlGroup;
     },
 
-    async transcribeEventRecording(_, { recordingFileKey }, context) {
-      console.log("entered event transcribe");
-      try {
-        checkUserAuth(context);
-      } catch (error) {
-        throw new AuthenticationError(error);
-      }
-      const client = new speech.SpeechClient();
+    // async transcribeEventRecording(_, { recordingFileKey }, context) {
+    //   console.log("entered event transcribe");
+    //   try {
+    //     checkUserAuth(context);
+    //   } catch (error) {
+    //     throw new AuthenticationError(error);
+    //   }
+    //   const client = new speech.SpeechClient();
 
-      const file = await getCsFile(recordingFileKey);
+    //   const file = await getCsFile(recordingFileKey);
 
-      const recordingBytes = file.Body.toString("base64");
+    //   const recordingBytes = file.Body.toString("base64");
 
-      const audio = {
-        content: recordingBytes,
-      };
+    //   const audio = {
+    //     content: recordingBytes,
+    //   };
 
-      const config = {
-        encoding: "LINEAR16",
-        sampleRateHertz: 44100,
-        languageCode: "en-US",
-      };
+    //   const config = {
+    //     encoding: "LINEAR16",
+    //     sampleRateHertz: 44100,
+    //     languageCode: "en-US",
+    //   };
 
-      const request = {
-        audio: audio,
-        config: config,
-      };
+    //   const request = {
+    //     audio: audio,
+    //     config: config,
+    //   };
 
-      const [response] = await client.recognize(request);
-      const transcription = response.results
-        .map((result) => result.alternatives[0].transcript)
-        .join("\n");
-      console.log(`Transcription: ${transcription}`);
+    //   const [response] = await client.recognize(request);
+    //   const transcription = response.results
+    //     .map((result) => result.alternatives[0].transcript)
+    //     .join("\n");
+    //   console.log(`Transcription: ${transcription}`);
 
-      return transcription;
-    },
+    //   return transcription;
+    // },
 
-    async transcribeInterimRecording(_, { recordingBytes }, context) {
+    async transcribeRecording(_, { recordingBytes }, context) {
       console.log("entered interim transcribe");
       try {
         checkUserAuth(context);
@@ -125,6 +153,7 @@ module.exports = {
         encoding: "LINEAR16",
         sampleRateHertz: 44100,
         languageCode: "en-US",
+        profanityFilter: true,
       };
 
       const request = {
@@ -159,12 +188,11 @@ module.exports = {
       if (!targetUser || !recordingBytes || recordingBytes === "") {
         throw new UserInputError("Invalid user ID or file key");
       }
-      const transcription =
-        await module.exports.Mutation.transcribeInterimRecording(
-          _,
-          { recordingBytes },
-          context
-        );
+      const transcription = await module.exports.Mutation.transcribeRecording(
+        _,
+        { recordingBytes },
+        context
+      );
       console.log("Transcription");
       console.log(transcription);
       const detectedStatus =
@@ -186,12 +214,7 @@ module.exports = {
 
     async handleDanger(
       _,
-      {
-        eventRecordingFileKey,
-        userId,
-        previousEventRecordingUrl,
-        eventRecordingUrl,
-      },
+      { recordingBytes, userId, eventRecordingUrl },
       context
     ) {
       console.log(
@@ -201,7 +224,6 @@ module.exports = {
       console.log("handledanger entered");
       console.log(eventRecordingUrl);
 
-      console.log(eventRecordingFileKey);
       console.log(userId);
       try {
         checkUserAuth(context);
@@ -212,17 +234,18 @@ module.exports = {
       const targetUser = await User.findById(userId);
       if (
         !targetUser ||
-        !eventRecordingFileKey ||
-        eventRecordingFileKey === ""
+        !recordingBytes ||
+        recordingBytes === "" ||
+        eventRecordingUrl === "" ||
+        !eventRecordingUrl
       ) {
         throw new UserInputError("Invalid user ID or file key");
       }
-      const transcription =
-        await module.exports.Mutation.transcribeEventRecording(
-          _,
-          { recordingFileKey: eventRecordingFileKey },
-          context
-        );
+      const transcription = await module.exports.Mutation.transcribeRecording(
+        _,
+        { recordingBytes: recordingBytes },
+        context
+      );
 
       console.log("Transcription");
       console.log(transcription);
@@ -233,13 +256,16 @@ module.exports = {
           { transcription, userId },
           context
         );
-      const eventRecordingUrlGroup =
-        await module.exports.Mutation.addEventRecordingUrl(
-          _,
-          { eventRecordingUrl, previousEventRecordingUrl, userId },
-          context
-        );
-      console.log(eventRecordingUrlGroup);
+      const eventRecording = await module.exports.Mutation.addEventRecordingUrl(
+        _,
+        {
+          eventRecordingUrl,
+          userId,
+          finish: detectedStatus === "stop" || detectedStatus === "panic",
+        },
+        context
+      );
+      console.log(eventRecording);
       // return detectedStatus;
 
       console.log("event recording returning...");
