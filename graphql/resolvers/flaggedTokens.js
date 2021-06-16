@@ -147,7 +147,7 @@ module.exports = {
           } else {
             count = 0;
             modifiedToken = sw.removeStopwords(policeToken.token.split(" "));
-            // take the current policeToken.token and remove all its common words, and create an array of the unique words left
+            // TODO take the current policeToken.token and remove all its common words, and create an array of the unique words left
             // take the transcription and remove all its common words
             // See if any word from the policeToken.token is included in the transcription
 
@@ -157,14 +157,12 @@ module.exports = {
                 console.log(
                   "~~~~~~~~~~~~~~~~~~~~~entered~~~~~~~~~~~~~~~~~~~~~~~~"
                 );
-
-                // console.log(word);
                 count += 1;
               }
             }
+            // TODO if >=half of the words in the token match the transcription...
             if (count > modifiedToken.length / 2) {
               console.log("entering here 3");
-
               detected = "start";
               break;
             }
@@ -203,15 +201,6 @@ module.exports = {
           }
         }
       }
-      // else if (
-      //   transcription.includes("f***") ||
-      //   transcription.includes("s***") ||
-      //   transcription.includes("b*****")
-      // ) {
-      //   // TODO Add more profane words above and organize in an env
-      //   detected = "start";
-      // }
-
       return detected;
     },
   },
