@@ -43,6 +43,7 @@
     "puppeteer": "^9.1.1",
     "react-ga": "^3.3.0",
     "react-native-dotenv": "^2.5.5",
+    "stopword": "^1.0.7",
     "utf8": "^3.0.0",
     "validator": "^13.0.0"
   },

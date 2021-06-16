@@ -4,6 +4,8 @@ const User = require("../../models/User");
 const checkUserAuth = require("../../util/checkUserAuth");
 const FlaggedToken = require("../../models/FlaggedToken");
 
+sw = require("stopword");
+
 module.exports = {
   Query: {},
   Mutation: {
@@ -116,47 +118,99 @@ module.exports = {
       transcription = transcription.toLowerCase();
       const policeTokens = await FlaggedToken.find({ name: "Police" });
       const thiefTokens = await FlaggedToken.find({ name: "Thief" });
-      console.log(targetUser.startKey);
       const startKey = targetUser.startKey.toLowerCase();
 
       var detected = "stop";
-      var count = 0;
-      if (startKey && startKey != "" && transcription.includes(startKey)) {
-        console.log("enters the start key check");
-        detected = "start";
-      } else if (policeTokens) {
-        for (var policeToken of policeTokens) {
-          console.log(policeToken);
-          if (transcription.includes(policeToken.token)) {
-            detected = "start";
-            break;
-          }
-          // else if {
-          //   for(var policeTokenWord of policeToken.split(" ")){
 
-          //     if (transcription.includes(policeTokenWord)){
-          //       count += 1
-          //     }
-          //   }
-          //   if(count >)
-          // }
-        }
-      } else if (thiefTokens) {
-        for (var thiefToken of thiefTokens) {
-          console.log(thiefToken);
-          if (transcription.includes(thiefToken.token)) {
-            detected = "start";
-            break;
-          }
-        }
-      } else if (
-        transcription.includes("f***") ||
-        transcription.includes("s***") ||
-        transcription.includes("b*****")
-      ) {
-        // Add more profane words above?
+      var modifiedToken;
+      const modifiedTranscription = sw.removeStopwords(
+        transcription.split(" ")
+      );
+      var count;
+
+      console.log("modified transcription: " + modifiedTranscription);
+      console.log(thiefTokens);
+      if (startKey && startKey != "" && transcription.includes(startKey)) {
         detected = "start";
       }
+      // TODO check out the changes I made here for if the phrase doesn't match directly...
+      // if there are enough common (unique) words between a particular token and the transcription, then we also return "start"
+      // Need to test this more, and make sure it doesn't cause too many false positives
+
+      if (policeTokens && detected === "stop") {
+        for (var policeToken of policeTokens) {
+          if (transcription.includes(policeToken.token)) {
+            console.log("entering here 4");
+
+            detected = "start";
+            break;
+          } else {
+            count = 0;
+            modifiedToken = sw.removeStopwords(policeToken.token.split(" "));
+            // take the current policeToken.token and remove all its common words, and create an array of the unique words left
+            // take the transcription and remove all its common words
+            // See if any word from the policeToken.token is included in the transcription
+
+            console.log("modified police token: " + modifiedToken);
+            for (var word of modifiedToken) {
+              if (transcription.includes(word)) {
+                console.log(
+                  "~~~~~~~~~~~~~~~~~~~~~entered~~~~~~~~~~~~~~~~~~~~~~~~"
+                );
+
+                // console.log(word);
+                count += 1;
+              }
+            }
+            if (count > modifiedToken.length / 2) {
+              console.log("entering here 3");
+
+              detected = "start";
+              break;
+            }
+          }
+        }
+      }
+      if (thiefTokens && detected === "stop") {
+        console.log("enters thief check");
+        for (var thiefToken of thiefTokens) {
+          if (transcription.includes(thiefToken.token)) {
+            console.log("entering here 1");
+            console.log(thiefToken.token);
+            detected = "start";
+            break;
+          } else {
+            count = 0;
+            modifiedToken = sw.removeStopwords(thiefToken.token.split(" "));
+
+            console.log("modified thief token: " + modifiedToken);
+            for (var word of modifiedToken) {
+              if (transcription.includes(word)) {
+                console.log(
+                  "~~~~~~~~~~~~~~~~~~~~~entered~~~~~~~~~~~~~~~~~~~~~~~~"
+                );
+
+                // console.log(word);
+                count += 1;
+              }
+            }
+            console.log("Count is " + count);
+            if (count > modifiedToken.length / 2) {
+              console.log("entering here 2");
+              detected = "start";
+              break;
+            }
+          }
+        }
+      }
+      // else if (
+      //   transcription.includes("f***") ||
+      //   transcription.includes("s***") ||
+      //   transcription.includes("b*****")
+      // ) {
+      //   // TODO Add more profane words above and organize in an env
+      //   detected = "start";
+      // }
 
       return detected;
     },
