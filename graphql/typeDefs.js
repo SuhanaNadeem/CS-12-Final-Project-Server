@@ -70,6 +70,8 @@ module.exports = gql`
     getUserById(userId: String!): User!
 
     # getEventRecordingTriggered(userId: String!): Boolean!
+    getPoliceTokens: [String]!
+    getThiefTokens: [String]!
     getEventRecordingsByUser(userId: String!): [EventRecording]! # TODO: use this to get all eventrecordings... can get all urls w/in a group as well
   }
 
@@ -129,6 +131,9 @@ module.exports = gql`
     createPoliceTokens(tokens: String!): [String]
     createThiefTokens(tokens: String!): [String]
 
+    deletePoliceTokens(tokens: String!): Boolean!
+    deleteThiefTokens(tokens: String!): Boolean!
+    
     removeRecordingFromAWS(recordingUrl: String!): String # Delete individual url from AWS
     # TODO: allow the user to use the following mutation to delete an entire event recording group, with all its urls (they think it's just one recording...)
     deleteEventRecordingGroup(eventRecordingId: String!): String # Delete entire event recording group, with all its urls removed from AWS first
