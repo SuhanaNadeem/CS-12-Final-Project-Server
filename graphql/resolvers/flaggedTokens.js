@@ -50,16 +50,24 @@ module.exports = {
       }
       tokens = tokens.toLowerCase();
       var tokenArray = tokens.split("&");
+      var targetToken;
+      var addedTokens = [];
       for (var t of tokenArray) {
-        console.log(t);
-        const newPoliceToken = new FlaggedToken({
-          name: "Police",
-          token: t,
-        });
-        const res = await newPoliceToken.save();
+        targetToken = await FlaggedToken.find({ token: t });
+        // <1 of the specified token(s) already exist(s)?
+
+        if (!targetToken || targetToken.length === 0) {
+          addedTokens.push(t);
+          console.log(t);
+          const newPoliceToken = new FlaggedToken({
+            name: "Police",
+            token: t,
+          });
+          await newPoliceToken.save();
+        }
       }
 
-      return tokenArray;
+      return addedTokens;
     },
 
     async createThiefTokens(_, { tokens }, context) {
@@ -74,15 +82,22 @@ module.exports = {
       }
       tokens = tokens.toLowerCase();
       var tokenArray = tokens.split("&");
+      var targetToken;
+      var addedTokens = [];
       for (var t of tokenArray) {
-        console.log(t);
-        const newThiefToken = new FlaggedToken({
-          name: "Thief",
-          token: t,
-        });
-        const res = await newThiefToken.save();
-      }
+        targetToken = await FlaggedToken.find({ token: t });
+        // <1 of the specified token(s) already exist(s)?
 
+        if (!targetToken || targetToken.length === 0) {
+          addedTokens.push(t);
+
+          const newThiefToken = new FlaggedToken({
+            name: "Thief",
+            token: t,
+          });
+          await newThiefToken.save();
+        }
+      }
       return tokenArray;
     },
 
