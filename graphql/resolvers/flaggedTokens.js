@@ -136,8 +136,8 @@ module.exports = {
             await token.delete();
             tokenRemoved = true;
             // Keep looping to remove all occurences of token
-          }
-          else if (removeToken === "*") { // Clear all Police tokens (dangerous)
+          } else if (removeToken === "*") {
+            // Clear all Police tokens (dangerous)
             await token.delete();
             tokenRemoved = true;
           }
@@ -158,16 +158,16 @@ module.exports = {
             await token.delete();
             tokenRemoved = true;
             // Keep looping to remove all occurences of token
-          }
-          else if (removeToken === "*") { // Clear all Police tokens (dangerous)
+          } else if (removeToken === "*") {
+            // Clear all Police tokens (dangerous)
             await token.delete();
             tokenRemoved = true;
           }
         }
       }
 
-    return tokenRemoved;
-  },
+      return tokenRemoved;
+    },
 
     async matchStartTranscription(_, { transcription, userId }, context) {
       console.log("matchTranscription entered");
