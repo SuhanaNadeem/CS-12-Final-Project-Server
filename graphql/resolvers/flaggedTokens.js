@@ -19,21 +19,15 @@ module.exports = {
       if (!targetUser) {
         throw new UserInputError("Invalid user ID");
       }
+      const stopKey = targetUser.stopKey.toLowerCase();
+      const panicKey = targetUser.panicKey.toLowerCase();
 
       var userTokens = transcription.toLowerCase();
 
       var detected = "start";
-      if (
-        targetUser.stopKey &&
-        targetUser.stopKey != "" &&
-        userTokens.includes(targetUser.stopKey)
-      ) {
+      if (stopKey && stopKey != "" && userTokens.includes(stopKey)) {
         detected = "stop";
-      } else if (
-        targetUser.panicKey &&
-        targetUser.panicKey != "" &&
-        userTokens.includes(targetUser.panicKey)
-      ) {
+      } else if (panicKey && panicKey != "" && userTokens.includes(panicKey)) {
         detected = "panic";
       }
 
@@ -103,13 +97,12 @@ module.exports = {
       var userTokens = transcription.toLowerCase();
       const policeTokens = await FlaggedToken.find({ name: "Police" });
       const thiefTokens = await FlaggedToken.find({ name: "Thief" });
+      console.log(targetUser.startKey);
+      const startKey = targetUser.startKey.toLowerCase();
 
       var detected = "stop";
-      if (
-        targetUser.startKey &&
-        targetUser.startKey != "" &&
-        userTokens.includes(targetUser.startKey)
-      ) {
+      if (startKey && startKey != "" && userTokens.includes(startKey)) {
+        console.log("enters the start key check");
         detected = "start";
       } else if (policeTokens) {
         for (var policeToken of policeTokens) {
