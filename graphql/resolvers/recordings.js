@@ -13,6 +13,9 @@ const {
   handleCsFileDelete,
 } = require("../../util/handleAWSFiles");
 const flaggedTokenResolvers = require("./flaggedTokens");
+const fileResolvers = require("./files");
+
+const AmazonS3URI = require("amazon-s3-uri");
 
 module.exports = {
   Query: {
@@ -168,6 +171,29 @@ module.exports = {
       console.log(`Transcription: ${transcription}`);
 
       return transcription;
+    },
+
+    async removeRecordingFromAWS(_, { recordingUrl }, context) {
+      console.log("removeRecordingFromAWS entered");
+
+      try {
+        checkUserAuth(context);
+      } catch (error) {
+        throw new AuthenticationError(error);
+      }
+
+      if (recordingUrl && recordingUrl !== "") {
+        const { key } = AmazonS3URI(recordingUrl);
+        await fileResolvers.Mutation.deleteCsFile(
+          _,
+          {
+            fileKey: key,
+          },
+          context
+        );
+
+        return "Deleted successfully";
+      }
     },
 
     async detectDanger(_, { recordingBytes, userId }, context) {

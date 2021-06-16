@@ -128,5 +128,7 @@ module.exports = gql`
 
     createPoliceTokens(tokens: String!): [String]
     createThiefTokens(tokens: String!): [String]
+
+    removeRecordingFromAWS(recordingUrl: String!): String
   }
 `;
