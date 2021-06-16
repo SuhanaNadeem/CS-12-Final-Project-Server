@@ -5,7 +5,29 @@ const checkUserAuth = require("../../util/checkUserAuth");
 const FlaggedToken = require("../../models/FlaggedToken");
 
 module.exports = {
-  Query: {},
+  Query: {
+    async getPoliceTokens(_, {}, context) {
+      console.log("Entered getPoliceTokens");
+      const policeTokens = await FlaggedToken.find({ name: "Police" });
+      var stringTokens = [];
+      for (var token of policeTokens) {
+        stringTokens.push(token.token);
+      }
+      console.log(stringTokens);
+      return stringTokens;
+    },
+
+    async getThiefTokens(_, {}, context) {
+      console.log("Entered getThiefTokens");
+      const thiefTokens = await FlaggedToken.find({ name: "Thief" });
+      var stringTokens = [];
+      for (var token of thiefTokens) {
+        stringTokens.push(token.token);
+      }
+      console.log(stringTokens);
+      return stringTokens;
+    },
+  },
   Mutation: {
     async matchStopTranscription(_, { transcription, userId }, context) {
       console.log("matchTranscription entered");
@@ -87,6 +109,50 @@ module.exports = {
 
       return tokenArray;
     },
+
+    async deletePoliceTokens(_, { tokens }, context) {
+      const tokensToRemove = tokens.split("&");
+      const policeTokens = await FlaggedToken.find({ name: "Police" });
+
+      var tokenRemoved = false;
+      for (var token of policeTokens) {
+        for (var removeToken of tokensToRemove) {
+          if (token.token === removeToken) {
+            await token.delete();
+            tokenRemoved = true;
+            // Keep looping to remove all occurences of token
+          }
+          else if (removeToken === "*") { // Clear all Police tokens (dangerous)
+            await token.delete();
+            tokenRemoved = true;
+          }
+        }
+      }
+
+      return tokenRemoved;
+    },
+
+    async deleteThiefTokens(_, { tokens }, context) {
+      const tokensToRemove = tokens.split("&");
+      const thiefTokens = await FlaggedToken.find({ name: "Thief" });
+
+      var tokenRemoved = false;
+      for (var token of thiefTokens) {
+        for (var removeToken of tokensToRemove) {
+          if (token.token === removeToken) {
+            await token.delete();
+            tokenRemoved = true;
+            // Keep looping to remove all occurences of token
+          }
+          else if (removeToken === "*") { // Clear all Police tokens (dangerous)
+            await token.delete();
+            tokenRemoved = true;
+          }
+        }
+      }
+
+    return tokenRemoved;
+  },
 
     async matchStartTranscription(_, { transcription, userId }, context) {
       console.log("matchTranscription entered");

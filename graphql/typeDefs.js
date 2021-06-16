@@ -71,6 +71,8 @@ module.exports = gql`
     getUserById(userId: String!): User!
 
     # getEventRecordingTriggered(userId: String!): Boolean!
+    getPoliceTokens: [String]!
+    getThiefTokens: [String]!
   }
 
   # actions
@@ -128,5 +130,8 @@ module.exports = gql`
 
     createPoliceTokens(tokens: String!): [String]
     createThiefTokens(tokens: String!): [String]
+
+    deletePoliceTokens(tokens: String!): Boolean!
+    deleteThiefTokens(tokens: String!): Boolean!
   }
 `;
