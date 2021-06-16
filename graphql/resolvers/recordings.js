@@ -16,6 +16,7 @@ const flaggedTokenResolvers = require("./flaggedTokens");
 const fileResolvers = require("./files");
 
 const AmazonS3URI = require("amazon-s3-uri");
+const FlaggedToken = require("../../models/FlaggedToken");
 
 module.exports = {
   Query: {
@@ -32,6 +33,23 @@ module.exports = {
     //   const eventRecordingTriggered = targetUser.eventRecordingTriggered;
     //   return eventRecordingTriggered;
     // },
+    async getEventRecordingsByUser(_, { userId }, context) {
+      console.log("comes in here in getEventRecordingsByUser");
+
+      try {
+        checkUserAuth(context);
+      } catch (error) {
+        throw new Error(error);
+      }
+
+      const targetUser = await User.findById(userId);
+      const eventRecordings = await EventRecording.find({ userId });
+      if (!targetUser || !eventRecordings) {
+        throw new UserInputError("Invalid input");
+      } else {
+        return eventRecordings;
+      }
+    },
   },
   Mutation: {
     async addEventRecordingUrl(
@@ -181,9 +199,9 @@ module.exports = {
       } catch (error) {
         throw new AuthenticationError(error);
       }
+      const { key } = AmazonS3URI(recordingUrl);
 
-      if (recordingUrl && recordingUrl !== "") {
-        const { key } = AmazonS3URI(recordingUrl);
+      if (recordingUrl && recordingUrl !== "" && key) {
         await fileResolvers.Mutation.deleteCsFile(
           _,
           {
@@ -193,6 +211,8 @@ module.exports = {
         );
 
         return "Deleted successfully";
+      } else {
+        throw new UserInputError("Invalid input");
       }
     },
 
@@ -215,10 +235,6 @@ module.exports = {
         targetEventRecording.eventRecordingUrls.length != 0
       ) {
         for (var targetRecordingUrl of targetEventRecording.eventRecordingUrls) {
-          index =
-            targetEventRecording.eventRecordingUrls.indexOf(targetRecordingUrl);
-          targetEventRecording.eventRecordingUrls.splice(index, 1);
-          await targetEventRecording.save();
           await module.exports.Mutation.removeRecordingFromAWS(
             _,
             { recordingUrl: targetRecordingUrl },
@@ -228,6 +244,28 @@ module.exports = {
         await targetEventRecording.delete();
 
         return "Deleted successfully";
+      }
+    },
+
+    async deleteEventRecording(_, { eventRecordingId }, context) {
+      console.log("deleteEventRecording entered");
+
+      try {
+        checkUserAuth(context);
+      } catch (error) {
+        throw new AuthenticationError(error);
+      }
+
+      const targetEventRecording = await EventRecording.findById(
+        eventRecordingId
+      );
+      var index;
+      if (targetEventRecording) {
+        await targetEventRecording.delete();
+
+        return "Deleted successfully";
+      } else {
+        throw new UserInputError("Invalid Input");
       }
     },
 
