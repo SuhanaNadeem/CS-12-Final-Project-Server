@@ -259,7 +259,6 @@ module.exports = {
       const targetEventRecording = await EventRecording.findById(
         eventRecordingId
       );
-      var index;
       if (targetEventRecording) {
         await targetEventRecording.delete();
 

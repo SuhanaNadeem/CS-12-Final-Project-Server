@@ -67,7 +67,7 @@ module.exports = gql`
     getUserById(userId: String!): User!
 
     # getEventRecordingTriggered(userId: String!): Boolean!
-    getEventRecordingsByUser(userId: String!): [EventRecording]! # can get all urls w/in a group as well
+    getEventRecordingsByUser(userId: String!): [EventRecording]! # TODO: use this to get all eventrecordings... can get all urls w/in a group as well
   }
 
   # actions
