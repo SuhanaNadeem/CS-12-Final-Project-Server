@@ -15,6 +15,8 @@ const userSchema = new Schema({
   startKey: String,
   panicKey: String,
   stopKey: String,
+  friendIds: [String],
+  location: String,
 });
 
 module.exports = model("User", userSchema);

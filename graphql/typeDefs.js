@@ -27,6 +27,9 @@ module.exports = gql`
 
     createdAt: DateTime!
     token: String
+
+    location: String # TODO: this is where you will store a user's location via a mutation (to be made) you call from the front end
+    friendIds: [String] # TODO: store friends' ids
   }
 
   type File {
@@ -134,5 +137,8 @@ module.exports = gql`
       recordingUrl: String!
     ): String # Delete one url from event recording group, and remove it from AWS
     deleteEventRecording(eventRecordingId: String!): String # delete an event recording group, without removing its links from AWS
+
+    # TODO create a mutation setUserLocation - to set the user property - return the set location
+    # TODO create a mutation addFriends - given an array of userIds, add them to user's friends property
   }
 `;
