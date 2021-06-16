@@ -43,11 +43,7 @@ module.exports = gql`
     Key: String!
     Bucket: String!
   }
-  # TODO understand this type... there are currently no objects of this type in the DB
-  # TODO create a createPoliceTokens mutation that takes a String like "'arrest' 'get out' 'hands up'"
-  # and creates a new FlaggedToken appropriately for each word/phrase enclosed in '' in that phrase
-  # Do the same for createThiefTokens
-  # See signupUser in users.js for how to make an object of a type
+
   type FlaggedToken {
     name: String! # "Police" or "Thief"
     token: String! # word or phrase
@@ -73,6 +69,7 @@ module.exports = gql`
     # getEventRecordingTriggered(userId: String!): Boolean!
     getPoliceTokens: [String]!
     getThiefTokens: [String]!
+    getEventRecordingsByUser(userId: String!): [EventRecording]! # TODO: use this to get all eventrecordings... can get all urls w/in a group as well
   }
 
   # actions
@@ -133,5 +130,14 @@ module.exports = gql`
 
     deletePoliceTokens(tokens: String!): Boolean!
     deleteThiefTokens(tokens: String!): Boolean!
+    
+    removeRecordingFromAWS(recordingUrl: String!): String # Delete individual url from AWS
+    # TODO: allow the user to use the following mutation to delete an entire event recording group, with all its urls (they think it's just one recording...)
+    deleteEventRecordingGroup(eventRecordingId: String!): String # Delete entire event recording group, with all its urls removed from AWS first
+    deleteEventRecordingComponent(
+      eventRecordingId: String!
+      recordingUrl: String!
+    ): String # Delete one url from event recording group, and remove it from AWS
+    deleteEventRecording(eventRecordingId: String!): String # delete an event recording group, without removing its links from AWS
   }
 `;

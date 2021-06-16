@@ -41,20 +41,18 @@ module.exports = {
       if (!targetUser) {
         throw new UserInputError("Invalid user ID");
       }
+      const stopKey = targetUser.stopKey.toLowerCase();
+      const panicKey = targetUser.panicKey.toLowerCase();
 
-      var userTokens = transcription.toLowerCase();
+      transcription = transcription.toLowerCase();
 
       var detected = "start";
-      if (
-        targetUser.stopKey &&
-        targetUser.stopKey != "" &&
-        userTokens.includes(targetUser.stopKey)
-      ) {
+      if (stopKey && stopKey != "" && transcription.includes(stopKey)) {
         detected = "stop";
       } else if (
-        targetUser.panicKey &&
-        targetUser.panicKey != "" &&
-        userTokens.includes(targetUser.panicKey)
+        panicKey &&
+        panicKey != "" &&
+        transcription.includes(panicKey)
       ) {
         detected = "panic";
       }
@@ -166,37 +164,46 @@ module.exports = {
       if (!targetUser) {
         throw new UserInputError("Invalid user ID");
       }
-      var userTokens = transcription.toLowerCase();
+      transcription = transcription.toLowerCase();
       const policeTokens = await FlaggedToken.find({ name: "Police" });
       const thiefTokens = await FlaggedToken.find({ name: "Thief" });
+      console.log(targetUser.startKey);
+      const startKey = targetUser.startKey.toLowerCase();
 
       var detected = "stop";
-      if (
-        targetUser.startKey &&
-        targetUser.startKey != "" &&
-        userTokens.includes(targetUser.startKey)
-      ) {
+      var count = 0;
+      if (startKey && startKey != "" && transcription.includes(startKey)) {
+        console.log("enters the start key check");
         detected = "start";
       } else if (policeTokens) {
         for (var policeToken of policeTokens) {
           console.log(policeToken);
-          if (userTokens.includes(policeToken.token)) {
+          if (transcription.includes(policeToken.token)) {
             detected = "start";
             break;
           }
+          // else if {
+          //   for(var policeTokenWord of policeToken.split(" ")){
+
+          //     if (transcription.includes(policeTokenWord)){
+          //       count += 1
+          //     }
+          //   }
+          //   if(count >)
+          // }
         }
       } else if (thiefTokens) {
         for (var thiefToken of thiefTokens) {
           console.log(thiefToken);
-          if (userTokens.includes(thiefToken.token)) {
+          if (transcription.includes(thiefToken.token)) {
             detected = "start";
             break;
           }
         }
       } else if (
-        userTokens.includes("f***") ||
-        userTokens.includes("s***") ||
-        userTokens.includes("b*****")
+        transcription.includes("f***") ||
+        transcription.includes("s***") ||
+        transcription.includes("b*****")
       ) {
         // Add more profane words above?
         detected = "start";

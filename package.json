@@ -31,7 +31,6 @@
     "aws-sdk": "^2.713.0",
     "bcryptjs": "^2.4.3",
     "dotenv": "^8.2.0",
-    "etherscan-api": "^10.0.5",
     "fs": "^0.0.1-security",
     "graphql": "^15.5.0",
     "graphql-iso-date": "^3.6.1",
