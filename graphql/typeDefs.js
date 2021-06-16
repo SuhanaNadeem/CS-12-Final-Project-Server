@@ -129,6 +129,12 @@ module.exports = gql`
     createPoliceTokens(tokens: String!): [String]
     createThiefTokens(tokens: String!): [String]
 
-    removeRecordingFromAWS(recordingUrl: String!): String
+    removeRecordingFromAWS(recordingUrl: String!): String # Delete individual url from AWS
+    # TODO: allow the user to use the following mutation to delete an entire event recording group (they think it's just one recording...)
+    deleteEventRecordingGroup(eventRecordingId: String!): String # Delete entire event recording group from DB and AWS
+    deleteEventRecordingComponent(
+      eventRecordingId: String!
+      recordingUrl: String!
+    ): String # Delete one url from event recording group from DB and AWS
   }
 `;
