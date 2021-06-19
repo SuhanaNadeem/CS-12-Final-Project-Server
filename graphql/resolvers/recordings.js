@@ -289,7 +289,7 @@ module.exports = {
         targetEventRecording &&
         targetEventRecording.eventRecordingUrls &&
         targetEventRecording.eventRecordingUrls.length != 0 &&
-        targetEventRecording.eventRecordingUrls.includes(eventRecordingUrl)
+        targetEventRecording.eventRecordingUrls.includes(recordingUrl)
       ) {
         index = targetEventRecording.eventRecordingUrls.indexOf(recordingUrl);
         targetEventRecording.eventRecordingUrls.splice(index, 1);

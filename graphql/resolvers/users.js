@@ -10,13 +10,12 @@ const {
 } = require("../../util/validators");
 const User = require("../../models/User");
 
-const checkAdminAuth = require("../../util/checkAdminAuth");
 const checkUserAuth = require("../../util/checkUserAuth");
 
-const speech = require("@google-cloud/speech");
-const fs = require("fs");
-
-const { getCsFile } = require("../../util/handleAWSFiles");
+const client = require("twilio")(
+  process.env.TWILIO_ACCOUNT_SID,
+  process.env.TWILIO_AUTH_TOKEN
+);
 
 function generateToken(user) {
   return jwt.sign(
@@ -38,6 +37,7 @@ module.exports = {
         throw new AuthenticationError();
       }
       const users = await User.find();
+      console.log(users);
       return users;
     },
     async getUser(_, {}, context) {
@@ -96,6 +96,8 @@ module.exports = {
         name,
         email,
         password,
+        friendIds: [],
+        requesterIds: [],
         createdAt: new Date(),
       });
 
@@ -135,13 +137,9 @@ module.exports = {
 
     async deleteUser(_, { userId }, context) {
       try {
-        var admin = checkAdminAuth(context);
+        var user = checkUserAuth(context);
       } catch (error) {
-        try {
-          var user = checkUserAuth(context);
-        } catch (error) {
-          throw new Error(error);
-        }
+        throw new Error(error);
       }
 
       const targetUser = await User.findById(userId);
@@ -151,6 +149,63 @@ module.exports = {
       } else {
         throw new UserInputError("Invalid input");
       }
+    },
+
+    async setMessageInfo(
+      _,
+      { userId, newPanicMessage, newPanicPhone },
+      context
+    ) {
+      console.log("enters setMessageInfo");
+
+      try {
+        checkUserAuth(context);
+      } catch (error) {
+        throw new Error(error);
+      }
+      const targetUser = await User.findById(userId);
+      if (!targetUser || (!newPanicMessage && !newPanicPhone)) {
+        throw new UserInputError("Invalid input");
+      }
+      if (newPanicMessage && newPanicMessage !== "") {
+        targetUser.panicMessage = newPanicMessage;
+      }
+      if (newPanicPhone && newPanicPhone != "") {
+        targetUser.panicPhone = newPanicPhone;
+      }
+
+      await targetUser.save();
+      return targetUser;
+    },
+
+    async sendTwilioSMS(_, { message, phoneNumber }, context) {
+      console.log("enters sendTwilioSMS");
+
+      try {
+        checkUserAuth(context);
+      } catch (error) {
+        throw new Error(error);
+      }
+
+      // TODO: With the free trial account, we can only send to verified phone numbers. In production, with a paid Twilio account,
+      // this if block can be removed to allow the user to send a message to any phone number.
+      if (phoneNumber != process.env.TWILIO_VERIFIED_PHONE_NUMBER) {
+        throw new UserInputError("Phone number not verified");
+      }
+
+      client.messages
+        .create({
+          from: process.env.TWILIO_PHONE_NUMBER,
+          to: phoneNumber,
+          body: message,
+        })
+        .then((result) => {
+          console.log(result);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+      return "Sent " + message;
     },
   },
 };

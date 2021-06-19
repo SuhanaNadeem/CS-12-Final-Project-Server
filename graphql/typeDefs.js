@@ -29,7 +29,11 @@ module.exports = gql`
     token: String
 
     location: String # TODO: this is where you will store a user's location via a mutation (to be made) you call from the front end
-    friendIds: [String] # TODO: store friends' ids
+    friendIds: [String]
+    requesterIds: [String]
+
+    panicMessage: String
+    panicPhone: String
   }
 
   type File {
@@ -73,6 +77,14 @@ module.exports = gql`
     getPoliceTokens: [String]!
     getThiefTokens: [String]!
     getEventRecordingsByUser(userId: String!): [EventRecording]! # TODO: use this to get all eventrecordings... can get all urls w/in a group as well
+    getUserMatches(name: String!): [User]!
+
+    # TODO user will search for another user by name (getUserMatches) and be
+    # able to send any of the matches a friend request (sendFriendRequest - adds sender's userId to would-be-friend's requests)
+    # users will be able to see their friendRequests (getFriendRequests) and add any of them (addFriend - add friend)
+
+    getFriendRequests(userId: String!): [User]!
+    getFriends(userId: String!): [User]!
   }
 
   # actions
@@ -133,7 +145,7 @@ module.exports = gql`
 
     deletePoliceTokens(tokens: String!): Boolean!
     deleteThiefTokens(tokens: String!): Boolean!
-    
+
     removeRecordingFromAWS(recordingUrl: String!): String # Delete individual url from AWS
     # TODO: allow the user to use the following mutation to delete an entire event recording group, with all its urls (they think it's just one recording...)
     deleteEventRecordingGroup(eventRecordingId: String!): String # Delete entire event recording group, with all its urls removed from AWS first
@@ -142,8 +154,17 @@ module.exports = gql`
       recordingUrl: String!
     ): String # Delete one url from event recording group, and remove it from AWS
     deleteEventRecording(eventRecordingId: String!): String # delete an event recording group, without removing its links from AWS
-
     # TODO create a mutation setUserLocation - to set the user property - return the set location
-    # TODO create a mutation addFriends - given an array of userIds, add them to user's friends property
+    sendFriendRequest(requesterId: String!, receiverId: String!): [String]
+    addFriend(userId: String!, requesterId: String!): [String]
+    removeFriend(userId: String!, friendId: String!): [String]
+
+    setMessageInfo(
+      userId: String!
+      newPanicMessage: String
+      newPanicPhone: String
+    ): User
+
+    sendTwilioSMS(phoneNumber: String!, message: String!): String!
   }
 `;

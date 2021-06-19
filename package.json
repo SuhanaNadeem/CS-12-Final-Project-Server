@@ -48,6 +48,7 @@
     "validator": "^13.0.0"
   },
   "devDependencies": {
-    "nodemon": "^2.0.6"
+    "nodemon": "^2.0.6",
+    "twilio": "^3.64.0"
   }
 }
