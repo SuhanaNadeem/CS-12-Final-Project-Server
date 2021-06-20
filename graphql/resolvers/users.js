@@ -178,13 +178,25 @@ module.exports = {
       return targetUser;
     },
 
-    async sendTwilioSMS(_, { message, phoneNumber }, context) {
+    async sendTwilioSMS(
+      _,
+      { message, phoneNumber, eventRecordingUrl },
+      context
+    ) {
       console.log("enters sendTwilioSMS");
-
+      console.log("sends this eventRecordingUrl:");
+      console.log(eventRecordingUrl);
       try {
         checkUserAuth(context);
       } catch (error) {
         throw new Error(error);
+      }
+
+      if (
+        (!message || message === "") &&
+        (!phoneNumber || phoneNumber === "")
+      ) {
+        throw new UserInputError("Invalid input");
       }
 
       // TODO: With the free trial account, we can only send to verified phone numbers. In production, with a paid Twilio account,
@@ -193,6 +205,21 @@ module.exports = {
         throw new UserInputError("Phone number not verified");
       }
 
+      // if (eventRecordingUrl && eventRecordingUrl != "") {
+      //   client.messages
+      //     .create({
+      //       from: process.env.TWILIO_PHONE_NUMBER,
+      //       to: phoneNumber,
+      //       body: message,
+      //       mediaUrl: [eventRecordingUrl],
+      //     })
+      //     .then((result) => {
+      //       console.log(result);
+      //     })
+      //     .catch((err) => {
+      //       console.log(err);
+      //     });
+      // } else {
       client.messages
         .create({
           from: process.env.TWILIO_PHONE_NUMBER,
@@ -205,6 +232,8 @@ module.exports = {
         .catch((err) => {
           console.log(err);
         });
+      // }
+
       return "Sent " + message;
     },
   },

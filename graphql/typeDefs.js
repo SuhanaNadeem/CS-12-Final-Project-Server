@@ -165,6 +165,6 @@ module.exports = gql`
       newPanicPhone: String
     ): User
 
-    sendTwilioSMS(phoneNumber: String!, message: String!): String!
+    sendTwilioSMS(phoneNumber: String!, message: String!, eventRecordingUrl: String): String!
   }
 `;
