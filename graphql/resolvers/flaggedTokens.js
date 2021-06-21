@@ -3,6 +3,7 @@ const { UserInputError, AuthenticationError } = require("apollo-server");
 const User = require("../../models/User");
 const checkUserAuth = require("../../util/checkUserAuth");
 const FlaggedToken = require("../../models/FlaggedToken");
+const userResolvers = require("./users");
 
 sw = require("stopword");
 
@@ -34,11 +35,8 @@ module.exports = {
     async matchStopTranscription(_, { transcription, userId }, context) {
       console.log("matchTranscription entered");
 
-      try {
-        checkUserAuth(context);
-      } catch (error) {
-        throw new AuthenticationError(error);
-      }
+      await userResolvers.Mutation.authenticateUserByContext(_, {}, context);
+
       const targetUser = await User.findById(userId);
       if (!targetUser) {
         throw new UserInputError("Invalid user ID");
@@ -64,11 +62,7 @@ module.exports = {
 
     async createPoliceTokens(_, { tokens }, context) {
       console.log("createPoliceTokens entered");
-      try {
-        checkUserAuth(context);
-      } catch (error) {
-        throw new AuthenticationError(error);
-      }
+      await userResolvers.Mutation.authenticateUserByContext(_, {}, context);
       if (!tokens || tokens === "") {
         throw new UserInputError("Invalid input");
       }
@@ -96,11 +90,7 @@ module.exports = {
 
     async createThiefTokens(_, { tokens }, context) {
       console.log("createThiefTokens entered");
-      try {
-        checkUserAuth(context);
-      } catch (error) {
-        throw new AuthenticationError(error);
-      }
+      await userResolvers.Mutation.authenticateUserByContext(_, {}, context);
       if (!tokens || tokens === "") {
         throw new UserInputError("Invalid input");
       }
@@ -172,11 +162,7 @@ module.exports = {
     async matchStartTranscription(_, { transcription, userId }, context) {
       console.log("matchTranscription entered");
 
-      try {
-        checkUserAuth(context);
-      } catch (error) {
-        throw new AuthenticationError(error);
-      }
+      await userResolvers.Mutation.authenticateUserByContext(_, {}, context);
       const targetUser = await User.findById(userId);
       if (!targetUser) {
         throw new UserInputError("Invalid user ID");

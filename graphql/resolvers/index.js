@@ -4,6 +4,7 @@ const recordingResolvers = require("./recordings");
 const keyResolvers = require("./keys");
 const flaggedTokenResolvers = require("./flaggedTokens");
 const friendResolvers = require("./friends");
+const transcriptionResolvers = require("./transcriptions");
 
 const { GraphQLDateTime } = require("graphql-iso-date");
 
@@ -16,6 +17,7 @@ module.exports = {
     ...keyResolvers.Query,
     ...flaggedTokenResolvers.Query,
     ...friendResolvers.Query,
+    ...transcriptionResolvers.Query,
   },
   Mutation: {
     ...adminResolvers.Mutation,
@@ -24,5 +26,6 @@ module.exports = {
     ...keyResolvers.Mutation,
     ...flaggedTokenResolvers.Mutation,
     ...friendResolvers.Mutation,
+    ...transcriptionResolvers.Mutation,
   },
 };

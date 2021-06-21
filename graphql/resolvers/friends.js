@@ -43,11 +43,7 @@ module.exports = {
 
     async getFriendRequests(_, { userId }, context) {
       console.log("enters getFriendRequests");
-      try {
-        checkUserAuth(context);
-      } catch (error) {
-        throw new AuthenticationError(error);
-      }
+      await userResolvers.Mutation.authenticateUserByContext(_, {}, context);
       console.log(userId);
       const targetUser = await User.findById(userId);
 
@@ -68,11 +64,7 @@ module.exports = {
     },
     async getFriends(_, { userId }, context) {
       console.log("enters getFriends");
-      try {
-        checkUserAuth(context);
-      } catch (error) {
-        throw new AuthenticationError(error);
-      }
+      await userResolvers.Mutation.authenticateUserByContext(_, {}, context);
       console.log(userId);
       const targetUser = await User.findById(userId);
 

@@ -5,18 +5,13 @@ const EventRecording = require("../../models/EventRecording");
 
 const checkUserAuth = require("../../util/checkUserAuth");
 
-const speech = require("@google-cloud/speech");
+const transcriptionResolvers = require("./transcriptions");
 
-const {
-  getCsFile,
-  doesS3URLExist,
-  handleCsFileDelete,
-} = require("../../util/handleAWSFiles");
 const flaggedTokenResolvers = require("./flaggedTokens");
 const fileResolvers = require("./files");
+const userResolvers = require("./users");
 
 const AmazonS3URI = require("amazon-s3-uri");
-const FlaggedToken = require("../../models/FlaggedToken");
 
 module.exports = {
   Query: {
@@ -52,6 +47,72 @@ module.exports = {
     },
   },
   Mutation: {
+    async addToFinishedEventRecording(
+      _,
+      { eventRecordingUrl, userId },
+      context
+    ) {
+      const targetEventRecording = await EventRecording.findOne({
+        finished: false,
+        userId,
+      });
+      if (!targetEventRecording) {
+        throw new UserInputError("Invalid input");
+      }
+      if (targetEventRecording) {
+        // Detected "stop" or "panic" and has >0 associated recordings
+        console.log(1);
+        targetEventRecording.eventRecordingUrls.push(eventRecordingUrl);
+        targetEventRecording.finished = true;
+        await targetEventRecording.save();
+
+        return targetEventRecording.eventRecordingUrls;
+      } else {
+        console.log(2);
+        // Detected "stop" or "panic" and has 0 associated recordings
+        const newEventRecording = new EventRecording({
+          eventRecordingUrls: [],
+          finished: true,
+          userId,
+          createdAt: new Date(),
+        });
+        newEventRecording.eventRecordingUrls.push(eventRecordingUrl);
+        await newEventRecording.save();
+        return newEventRecording.eventRecordingUrls;
+      }
+    },
+    async addToUnfinishedEventRecording(
+      _,
+      { eventRecordingUrl, userId },
+      context
+    ) {
+      const targetEventRecording = await EventRecording.findOne({
+        finished: false,
+        userId,
+      });
+      if (!targetEventRecording) {
+        throw new UserInputError("Invalid input");
+      }
+      if (targetEventRecording) {
+        console.log(3);
+        // Detected "start" and has >0 associated recordings
+        targetEventRecording.eventRecordingUrls.push(eventRecordingUrl);
+        await targetEventRecording.save();
+        return targetEventRecording.eventRecordingUrls;
+      } else {
+        console.log(4);
+        // Detected "start" and has 0 associated recordings
+        const newEventRecording = new EventRecording({
+          eventRecordingUrls: [],
+          finished: false,
+          userId,
+          createdAt: new Date(),
+        });
+        newEventRecording.eventRecordingUrls.push(eventRecordingUrl);
+        await newEventRecording.save();
+        return newEventRecording.eventRecordingUrls;
+      }
+    },
     async addEventRecordingUrl(
       _,
       { eventRecordingUrl, userId, finish },
@@ -59,146 +120,37 @@ module.exports = {
     ) {
       console.log("addEventRecordingUrl entered");
 
-      try {
-        checkUserAuth(context);
-      } catch (error) {
-        throw new AuthenticationError(error);
-      }
+      await userResolvers.Mutation.authenticateUserByContext(_, {}, context);
 
       const targetUser = await User.findById(userId);
       if (!targetUser) {
         throw new UserInputError("Invalid user id");
       }
 
-      const targetEventRecording = await EventRecording.findOne({
-        finished: false,
-        userId,
-      });
+      var recordingUrls;
 
       if (finish) {
-        if (targetEventRecording) {
-          // Detected "stop" or "panic" and has >0 associated recordings
-          console.log(1);
-          targetEventRecording.eventRecordingUrls.push(eventRecordingUrl);
-          targetEventRecording.finished = true;
-          await targetEventRecording.save();
-
-          return targetEventRecording.eventRecordingUrls;
-        } else {
-          console.log(2);
-          // Detected "stop" or "panic" and has 0 associated recordings
-          const newEventRecording = new EventRecording({
-            eventRecordingUrls: [],
-            finished: true,
-            userId,
-            createdAt: new Date(),
-          });
-          newEventRecording.eventRecordingUrls.push(eventRecordingUrl);
-          await newEventRecording.save();
-          return newEventRecording.eventRecordingUrls;
-        }
+        recordingUrls =
+          await module.exports.Mutation.addToFinishedEventRecording(
+            _,
+            { userId, eventRecordingUrl },
+            context
+          );
       } else {
-        if (targetEventRecording) {
-          console.log(3);
-          // Detected "start" and has >0 associated recordings
-          targetEventRecording.eventRecordingUrls.push(eventRecordingUrl);
-          await targetEventRecording.save();
-          return targetEventRecording.eventRecordingUrls;
-        } else {
-          console.log(4);
-          // Detected "start" and has 0 associated recordings
-          const newEventRecording = new EventRecording({
-            eventRecordingUrls: [],
-            finished: false,
-            userId,
-            createdAt: new Date(),
-          });
-          newEventRecording.eventRecordingUrls.push(eventRecordingUrl);
-          await newEventRecording.save();
-          return newEventRecording.eventRecordingUrls;
-        }
+        recordingUrls =
+          await module.exports.Mutation.addToUnfinishedEventRecording(
+            _,
+            { userId, eventRecordingUrl },
+            context
+          );
       }
-    },
-
-    // async transcribeEventRecording(_, { recordingFileKey }, context) {
-    //   console.log("entered event transcribe");
-    //   try {
-    //     checkUserAuth(context);
-    //   } catch (error) {
-    //     throw new AuthenticationError(error);
-    //   }
-    //   const client = new speech.SpeechClient();
-
-    //   const file = await getCsFile(recordingFileKey);
-
-    //   const recordingBytes = file.Body.toString("base64");
-
-    //   const audio = {
-    //     content: recordingBytes,
-    //   };
-
-    //   const config = {
-    //     encoding: "LINEAR16",
-    //     sampleRateHertz: 44100,
-    //     languageCode: "en-US",
-    //   };
-
-    //   const request = {
-    //     audio: audio,
-    //     config: config,
-    //   };
-
-    //   const [response] = await client.recognize(request);
-    //   const transcription = response.results
-    //     .map((result) => result.alternatives[0].transcript)
-    //     .join("\n");
-    //   console.log(`Transcription: ${transcription}`);
-
-    //   return transcription;
-    // },
-
-    async transcribeRecording(_, { recordingBytes }, context) {
-      console.log("entered interim transcribe");
-      try {
-        checkUserAuth(context);
-      } catch (error) {
-        throw new AuthenticationError(error);
-      }
-      const client = new speech.SpeechClient();
-
-      const audio = {
-        content: recordingBytes,
-      };
-
-      const config = {
-        encoding: "LINEAR16",
-        sampleRateHertz: 44100,
-        languageCode: "en-US",
-        profanityFilter: true,
-      };
-
-      const request = {
-        audio: audio,
-        config: config,
-      };
-
-      const [response] = await client.recognize(request);
-      const transcription = response.results
-        .map((result) => result.alternatives[0].transcript)
-        .join("\n");
-      console.log(`Transcription: ${transcription}`);
-
-      return transcription;
+      return recordingUrls;
     },
 
     async removeRecordingFromAWS(_, { recordingUrl }, context) {
       console.log("removeRecordingFromAWS entered");
 
-      try {
-        checkUserAuth(context);
-      } catch (error) {
-        throw new AuthenticationError(error);
-      }
+      await userResolvers.Mutation.authenticateUserByContext(_, {}, context);
       const { key } = AmazonS3URI(recordingUrl);
 
       if (recordingUrl && recordingUrl !== "" && key) {
@@ -219,11 +171,7 @@ module.exports = {
     async deleteEventRecordingGroup(_, { eventRecordingId }, context) {
       console.log("deleteEventRecording entered");
 
-      try {
-        checkUserAuth(context);
-      } catch (error) {
-        throw new AuthenticationError(error);
-      }
+      await userResolvers.Mutation.authenticateUserByContext(_, {}, context);
 
       const targetEventRecording = await EventRecording.findById(
         eventRecordingId
@@ -250,11 +198,7 @@ module.exports = {
     async deleteEventRecording(_, { eventRecordingId }, context) {
       console.log("deleteEventRecording entered");
 
-      try {
-        checkUserAuth(context);
-      } catch (error) {
-        throw new AuthenticationError(error);
-      }
+      await userResolvers.Mutation.authenticateUserByContext(_, {}, context);
 
       const targetEventRecording = await EventRecording.findById(
         eventRecordingId
@@ -275,11 +219,7 @@ module.exports = {
     ) {
       console.log("deleteEventRecording entered");
 
-      try {
-        checkUserAuth(context);
-      } catch (error) {
-        throw new AuthenticationError(error);
-      }
+      await userResolvers.Mutation.authenticateUserByContext(_, {}, context);
 
       const targetEventRecording = await EventRecording.findById(
         eventRecordingId
@@ -312,21 +252,25 @@ module.exports = {
 
       console.log("detectdanger entered");
 
-      try {
-        checkUserAuth(context);
-      } catch (error) {
-        throw new AuthenticationError(error);
-      }
+      await userResolvers.Mutation.authenticateUserByContext(_, {}, context);
 
       const targetUser = await User.findById(userId);
       if (!targetUser || !recordingBytes || recordingBytes === "") {
         throw new UserInputError("Invalid user ID or file key");
       }
-      const transcription = await module.exports.Mutation.transcribeRecording(
-        _,
-        { recordingBytes },
-        context
-      );
+      // const transcription = await module.exports.Mutation.transcribeRecording(
+      //   _,
+      //   { recordingBytes, userId },
+      //   context
+      // );
+
+      const transcription =
+        await transcriptionResolvers.Mutation.transcribeRecording(
+          _,
+          { recordingBytes, userId },
+          context
+        );
+
       console.log("Transcription");
       console.log(transcription);
       const detectedStatus =
@@ -359,11 +303,7 @@ module.exports = {
       console.log(eventRecordingUrl);
 
       console.log(userId);
-      try {
-        checkUserAuth(context);
-      } catch (error) {
-        throw new AuthenticationError(error);
-      }
+      await userResolvers.Mutation.authenticateUserByContext(_, {}, context);
 
       const targetUser = await User.findById(userId);
       if (
@@ -375,11 +315,18 @@ module.exports = {
       ) {
         throw new UserInputError("Invalid user ID or file key");
       }
-      const transcription = await module.exports.Mutation.transcribeRecording(
-        _,
-        { recordingBytes: recordingBytes },
-        context
-      );
+      // const transcription = await module.exports.Mutation.transcribeRecording(
+      //   _,
+      //   { recordingBytes, userId },
+      //   context
+      // );
+
+      const transcription =
+        await transcriptionResolvers.Mutation.transcribeRecording(
+          _,
+          { recordingBytes, userId },
+          context
+        );
 
       console.log("Transcription");
       console.log(transcription);

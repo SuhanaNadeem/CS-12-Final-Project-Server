@@ -62,6 +62,14 @@ module.exports = gql`
     eventRecordingUrls: [String]
     userId: String!
     finished: Boolean!
+    createdAt: DateTime!
+  }
+
+  type Transcription {
+    id: String!
+    userId: String!
+    latestTranscription: String!
+    createdAt: DateTime!
   }
 
   # retrieve information
@@ -76,15 +84,17 @@ module.exports = gql`
     # getEventRecordingTriggered(userId: String!): Boolean!
     getPoliceTokens: [String]!
     getThiefTokens: [String]!
-    getEventRecordingsByUser(userId: String!): [EventRecording]! # TODO: use this to get all eventrecordings... can get all urls w/in a group as well
+    getEventRecordingsByUser(userId: String!): [EventRecording]!
     getUserMatches(name: String!): [User]!
 
-    # TODO user will search for another user by name (getUserMatches) and be
+    # user will search for another user by name (getUserMatches) and be
     # able to send any of the matches a friend request (sendFriendRequest - adds sender's userId to would-be-friend's requests)
     # users will be able to see their friendRequests (getFriendRequests) and add any of them (addFriend - add friend)
 
     getFriendRequests(userId: String!): [User]!
     getFriends(userId: String!): [User]!
+
+    getTranscriptionByUser(userId: String!): String!
   }
 
   # actions
@@ -123,7 +133,7 @@ module.exports = gql`
     transcribeRecording(recordingBytes: String!): String!
 
     # getEventRecordingUrl(eventRecordingUrl: String!, userId: String!): [String]
-
+    authenticateUserByContext: String
     detectDanger(recordingBytes: String, userId: String!): String!
     handleDanger(
       recordingBytes: String
@@ -165,6 +175,19 @@ module.exports = gql`
       newPanicPhone: String
     ): User
 
-    sendTwilioSMS(phoneNumber: String!, message: String!, eventRecordingUrl: String): String!
+    sendTwilioSMS(
+      phoneNumber: String!
+      message: String!
+      eventRecordingUrl: String
+    ): String!
+
+    addToFinishedEventRecording(
+      eventRecordingUrl: String!
+      userId: String!
+    ): [String]
+    addToUnfinishedEventRecording(
+      eventRecordingUrl: String!
+      userId: String!
+    ): [String]
   }
 `;

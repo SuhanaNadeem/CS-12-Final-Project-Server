@@ -178,6 +178,14 @@ module.exports = {
       return targetUser;
     },
 
+    async authenticateUserByContext(_, {}, context) {
+      try {
+        checkUserAuth(context);
+      } catch (error) {
+        throw new AuthenticationError(error);
+      }
+    },
+
     async sendTwilioSMS(
       _,
       { message, phoneNumber, eventRecordingUrl },

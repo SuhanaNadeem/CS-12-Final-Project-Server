@@ -2,6 +2,7 @@ const { UserInputError, AuthenticationError } = require("apollo-server");
 
 const User = require("../../models/User");
 const checkUserAuth = require("../../util/checkUserAuth");
+const userResolvers = require("./users");
 
 module.exports = {
   Query: {},
@@ -9,11 +10,7 @@ module.exports = {
     async setStartKey(_, { userId, startKey }, context) {
       console.log("Enters setStartKey");
 
-      try {
-        checkUserAuth(context);
-      } catch (error) {
-        throw new AuthenticationError(error);
-      }
+      await userResolvers.Mutation.authenticateUserByContext(_, {}, context);
       const targetUser = await User.findById(userId);
       if (!targetUser) {
         throw new UserInputError("Invalid user ID");
@@ -36,11 +33,7 @@ module.exports = {
     async setStopKey(_, { userId, stopKey }, context) {
       console.log("Enters setStopKey");
 
-      try {
-        checkUserAuth(context);
-      } catch (error) {
-        throw new AuthenticationError(error);
-      }
+      await userResolvers.Mutation.authenticateUserByContext(_, {}, context);
 
       const targetUser = await User.findById(userId);
       if (!targetUser) {
@@ -64,11 +57,7 @@ module.exports = {
     async setPanicKey(_, { userId, panicKey }, context) {
       console.log("Enters setPanicKey");
 
-      try {
-        checkUserAuth(context);
-      } catch (error) {
-        throw new AuthenticationError(error);
-      }
+      await userResolvers.Mutation.authenticateUserByContext(_, {}, context);
 
       const targetUser = await User.findById(userId);
       if (!targetUser) {
