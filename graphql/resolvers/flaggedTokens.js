@@ -159,80 +159,26 @@ module.exports = {
       return tokenRemoved;
     },
 
-    async matchStartTranscription(_, { transcription, userId }, context) {
-      console.log("matchTranscription entered");
+    async matchToTokens(_, { detected, transcription, name }, context) {
+      const tokens = await FlaggedToken.find({ name });
 
-      await userResolvers.Mutation.authenticateUserByContext(_, {}, context);
-      const targetUser = await User.findById(userId);
-      if (!targetUser) {
-        throw new UserInputError("Invalid user ID");
-      }
-      transcription = transcription.toLowerCase();
-      const policeTokens = await FlaggedToken.find({ name: "Police" });
-      const thiefTokens = await FlaggedToken.find({ name: "Thief" });
-      const startKey = targetUser.startKey.toLowerCase();
-
-      var detected = "stop";
-
-      var modifiedToken;
-      const modifiedTranscription = sw.removeStopwords(
-        transcription.split(" ")
-      );
       var count;
+      var modifiedToken;
 
-      console.log("modified transcription: " + modifiedTranscription);
-      console.log(thiefTokens);
-      if (startKey && startKey != "" && transcription.includes(startKey)) {
-        detected = "start";
-      }
-      // TODO check out the changes I made here for if the phrase doesn't match directly...
-      // if there are enough common (unique) words between a particular token and the transcription, then we also return "start"
-      // Need to test this more, and make sure it doesn't cause too many false positives
-
-      if (policeTokens && detected === "stop") {
-        for (var policeToken of policeTokens) {
-          if (transcription.includes(policeToken.token)) {
-            console.log("entering here 4");
-
+      if (tokens && detected === "stop") {
+        console.log("enters thief check");
+        for (var currentToken of tokens) {
+          if (transcription.includes(currentToken.token)) {
+            console.log("entering here 1");
+            console.log(currentToken.token);
             detected = "start";
             break;
           } else {
             count = 0;
-            modifiedToken = sw.removeStopwords(policeToken.token.split(" "));
+            modifiedToken = sw.removeStopwords(currentToken.token.split(" "));
             // TODO take the current policeToken.token and remove all its common words, and create an array of the unique words left
             // take the transcription and remove all its common words
             // See if any word from the policeToken.token is included in the transcription
-
-            console.log("modified police token: " + modifiedToken);
-            for (var word of modifiedToken) {
-              if (transcription.includes(word)) {
-                console.log(
-                  "~~~~~~~~~~~~~~~~~~~~~entered~~~~~~~~~~~~~~~~~~~~~~~~"
-                );
-                count += 1;
-              }
-            }
-            // TODO if >=half of the words in the token match the transcription...
-            if (count > modifiedToken.length / 2) {
-              console.log("entering here 3");
-              detected = "start";
-              break;
-            }
-          }
-        }
-      }
-      if (thiefTokens && detected === "stop") {
-        console.log("enters thief check");
-        for (var thiefToken of thiefTokens) {
-          if (transcription.includes(thiefToken.token)) {
-            console.log("entering here 1");
-            console.log(thiefToken.token);
-            detected = "start";
-            break;
-          } else {
-            count = 0;
-            modifiedToken = sw.removeStopwords(thiefToken.token.split(" "));
-
             console.log("modified thief token: " + modifiedToken);
             for (var word of modifiedToken) {
               if (transcription.includes(word)) {
@@ -244,6 +190,8 @@ module.exports = {
                 count += 1;
               }
             }
+            // TODO if >=half of the words in the token match the transcription...
+
             console.log("Count is " + count);
             if (count > modifiedToken.length / 2) {
               console.log("entering here 2");
@@ -253,6 +201,46 @@ module.exports = {
           }
         }
       }
+
+      return detected;
+    },
+
+    async matchStartTranscription(_, { transcription, userId }, context) {
+      console.log("matchTranscription entered");
+
+      await userResolvers.Mutation.authenticateUserByContext(_, {}, context);
+      const targetUser = await User.findById(userId);
+      if (!targetUser) {
+        throw new UserInputError("Invalid user ID");
+      }
+      transcription = transcription.toLowerCase();
+      const startKey = targetUser.startKey.toLowerCase();
+
+      var detected = "stop";
+
+      const modifiedTranscription = sw.removeStopwords(
+        transcription.split(" ")
+      );
+
+      console.log("modified transcription: " + modifiedTranscription);
+      if (startKey && startKey != "" && transcription.includes(startKey)) {
+        detected = "start";
+      }
+      // TODO check out the changes I made here for if the phrase doesn't match directly...
+      // if there are enough common (unique) words between a particular token and the transcription, then we also return "start"
+      // Need to test this more, and make sure it doesn't cause too many false positives
+
+      detected = await module.exports.Mutation.matchToTokens(
+        _,
+        { name: "Police", detected, transcription },
+        context
+      );
+      detected = await module.exports.Mutation.matchToTokens(
+        _,
+        { name: "Thief", detected, transcription },
+        context
+      );
+
       return detected;
     },
   },

@@ -176,7 +176,6 @@ module.exports = {
       const targetEventRecording = await EventRecording.findById(
         eventRecordingId
       );
-      var index;
       if (
         targetEventRecording &&
         targetEventRecording.eventRecordingUrls &&
@@ -227,8 +226,6 @@ module.exports = {
       var index;
       if (
         targetEventRecording &&
-        targetEventRecording.eventRecordingUrls &&
-        targetEventRecording.eventRecordingUrls.length != 0 &&
         targetEventRecording.eventRecordingUrls.includes(recordingUrl)
       ) {
         index = targetEventRecording.eventRecordingUrls.indexOf(recordingUrl);
@@ -258,12 +255,6 @@ module.exports = {
       if (!targetUser || !recordingBytes || recordingBytes === "") {
         throw new UserInputError("Invalid user ID or file key");
       }
-      // const transcription = await module.exports.Mutation.transcribeRecording(
-      //   _,
-      //   { recordingBytes, userId },
-      //   context
-      // );
-
       const transcription =
         await transcriptionResolvers.Mutation.transcribeRecording(
           _,

@@ -9,6 +9,7 @@ const {
 const User = require("../../models/User");
 
 const checkUserAuth = require("../../util/checkUserAuth");
+const userResolvers = require("./users");
 
 module.exports = {
   Query: {

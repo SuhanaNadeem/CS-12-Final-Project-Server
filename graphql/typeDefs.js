@@ -189,5 +189,13 @@ module.exports = gql`
       eventRecordingUrl: String!
       userId: String!
     ): [String]
+
+    setTranscriptionByUser(userId: String!, transcription: String!): String
+
+    matchToTokens(
+      detected: String!
+      name: String!
+      transcription: String!
+    ): String!
   }
 `;

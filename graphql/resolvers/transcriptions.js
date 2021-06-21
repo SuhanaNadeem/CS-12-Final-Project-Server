@@ -7,12 +7,6 @@ const checkUserAuth = require("../../util/checkUserAuth");
 
 const speech = require("@google-cloud/speech");
 
-const {
-  getCsFile,
-  doesS3URLExist,
-  handleCsFileDelete,
-} = require("../../util/handleAWSFiles");
-
 const Transcription = require("../../models/Transcription");
 const userResolvers = require("./users");
 
@@ -65,6 +59,17 @@ module.exports = {
         .join("\n");
       console.log(`Transcription: ${transcription}`);
 
+      await module.exports.Mutation.setTranscriptionByUser(
+        _,
+        { userId, transcription },
+        context
+      );
+
+      return transcription;
+    },
+
+    async setTranscriptionByUser(_, { userId, transcription }, context) {
+      console.log("setTranscriptionByUser entered");
       const targetTranscription = await Transcription.findOne({ userId });
 
       if (targetTranscription) {
@@ -82,8 +87,6 @@ module.exports = {
         console.log(newTranscription.latestTranscription);
         await newTranscription.save();
       }
-
-      return transcription;
     },
   },
 };
