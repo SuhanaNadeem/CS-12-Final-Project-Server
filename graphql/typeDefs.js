@@ -29,6 +29,8 @@ module.exports = gql`
     token: String
 
     location: String # TODO: this is where you will store a user's location via a mutation (to be made) you call from the front end
+    locationOn: Boolean
+
     friendIds: [String]
     requesterIds: [String]
 
@@ -95,6 +97,8 @@ module.exports = gql`
     getFriends(userId: String!): [User]!
 
     getTranscriptionByUser(userId: String!): String!
+    # TODO  query getFriendLocations should take userId, call getFriends, and for each friend from getFriends' returned array, check if locationOn is true. If so, add the location to a list, friendLocations. Return friendLocations.
+    # TODO  query getUserLocation should return the user's location ONLY IF locationOn is true
   }
 
   # actions
@@ -157,14 +161,12 @@ module.exports = gql`
     deleteThiefTokens(tokens: String!): Boolean!
 
     removeRecordingFromAWS(recordingUrl: String!): String # Delete individual url from AWS
-    # TODO: allow the user to use the following mutation to delete an entire event recording group, with all its urls (they think it's just one recording...)
     deleteEventRecordingGroup(eventRecordingId: String!): String # Delete entire event recording group, with all its urls removed from AWS first
     deleteEventRecordingComponent(
       eventRecordingId: String!
       recordingUrl: String!
     ): String # Delete one url from event recording group, and remove it from AWS
     deleteEventRecording(eventRecordingId: String!): String # delete an event recording group, without removing its links from AWS
-    # TODO create a mutation setUserLocation - to set the user property - return the set location
     sendFriendRequest(requesterId: String!, receiverId: String!): [String]
     addFriend(userId: String!, requesterId: String!): [String]
     removeFriend(userId: String!, friendId: String!): [String]
@@ -197,5 +199,8 @@ module.exports = gql`
       name: String!
       transcription: String!
     ): String!
+
+    # TODO create a mutation setUserLocation - to set the user location property to the location coords from the front end (hopefully a string argument works for that)
+    # TODO toggleLocationOn should take a boolean from the front end with userId, setting user's locationOn attribute to true if the argument is false and true otherwise
   }
 `;

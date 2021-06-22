@@ -20,6 +20,7 @@ const userSchema = new Schema({
   location: String,
   panicPhone: String,
   panicMessage: String,
+  locationOn: Boolean,
 });
 
 module.exports = model("User", userSchema);
