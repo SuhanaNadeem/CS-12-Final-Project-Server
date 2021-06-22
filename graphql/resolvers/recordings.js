@@ -56,9 +56,7 @@ module.exports = {
         finished: false,
         userId,
       });
-      if (!targetEventRecording) {
-        throw new UserInputError("Invalid input");
-      }
+
       if (targetEventRecording) {
         // Detected "stop" or "panic" and has >0 associated recordings
         console.log(1);
@@ -90,9 +88,7 @@ module.exports = {
         finished: false,
         userId,
       });
-      if (!targetEventRecording) {
-        throw new UserInputError("Invalid input");
-      }
+
       if (targetEventRecording) {
         console.log(3);
         // Detected "start" and has >0 associated recordings
