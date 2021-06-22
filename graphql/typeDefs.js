@@ -98,6 +98,7 @@ module.exports = gql`
 
     getTranscriptionByUser(userId: String!): String!
     # TODO  query getFriendLocations should take userId, call getFriends, and for each friend from getFriends' returned array, check if locationOn is true. If so, add the location to a list, friendLocations. Return friendLocations.
+    
     # TODO  query getUserLocation should return the user's location ONLY IF locationOn is true
   }
 
@@ -201,6 +202,12 @@ module.exports = gql`
     ): String!
 
     # TODO create a mutation setUserLocation - to set the user location property to the location coords from the front end (hopefully a string argument works for that)
+    setUserLocation(
+      location: String!
+      userId: String!
+    ): String!
+
     # TODO toggleLocationOn should take a boolean from the front end with userId, setting user's locationOn attribute to true if the argument is false and true otherwise
+    toggleLocationOn(userId: String!): Boolean! # Returns boolean indicating whether location sharing is on or off after the mutation call
   }
 `;
