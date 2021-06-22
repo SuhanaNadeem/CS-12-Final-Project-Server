@@ -244,5 +244,39 @@ module.exports = {
 
       return "Sent " + message;
     },
+
+    async setUserLocation(_, {location, userId}, context) {
+      try {
+        checkUserAuth(context);
+      } catch (error) {
+        throw new Error(error);
+      }
+      const targetUser = await User.findById(userId);
+      if (!targetUser) {
+        throw new UserInputError("Invalid input");
+      }
+
+      targetUser.location = location;
+      await targetUser.save();
+      return location;
+    },
+
+    async toggleLocationOn(_, {userId}, context) {
+      try {
+        checkUserAuth(context);
+      } catch (error) {
+        throw new Error(error);
+      }
+      const targetUser = await User.findById(userId);
+      if (!targetUser) {
+        throw new UserInputError("Invalid input");
+      }
+
+      var toggledLocation = !targetUser.locationOn;
+      targetUser.locationOn = toggledLocation;
+
+      await targetUser.save();
+      return toggledLocation;
+    },
   },
 };
