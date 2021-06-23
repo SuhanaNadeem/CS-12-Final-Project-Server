@@ -158,9 +158,10 @@ module.exports = gql`
     deletePoliceTokens(tokens: String!): Boolean!
     deleteThiefTokens(tokens: String!): Boolean!
 
-    removeRecordingFromAWS(recordingUrl: String!): String # Delete individual url from AWS
-    deleteEventRecordingGroup(eventRecordingId: String!): String # Delete entire event recording group, with all its urls removed from AWS first
-    deleteEventRecordingComponent(
+    # "Remove" refers to deleting from AWS. "Delete" refers to deleting from MongoDB.
+    removeEventRecordingUrl(recordingUrl: String!): String # Remove individual url from AWS
+    removeAndDeleteEventRecording(eventRecordingId: String!): String # Delete entire event recording group, with all its urls removed from AWS first
+    removeAndDeleteEventRecordingUrl(
       eventRecordingId: String!
       recordingUrl: String!
     ): String # Delete one url from event recording group, and remove it from AWS

@@ -28,6 +28,8 @@ module.exports = {
       if (!targetUser || !targetTranscription) {
         throw new UserInputError("Invalid input");
       } else {
+        console.log("Latest transcription from the backend");
+        console.log(targetTranscription.latestTranscription);
         return targetTranscription.latestTranscription;
       }
     },

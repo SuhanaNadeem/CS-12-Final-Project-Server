@@ -212,22 +212,6 @@ module.exports = {
       if (phoneNumber != process.env.TWILIO_VERIFIED_PHONE_NUMBER) {
         throw new UserInputError("Phone number not verified");
       }
-
-      // if (eventRecordingUrl && eventRecordingUrl != "") {
-      //   client.messages
-      //     .create({
-      //       from: process.env.TWILIO_PHONE_NUMBER,
-      //       to: phoneNumber,
-      //       body: message,
-      //       mediaUrl: [eventRecordingUrl],
-      //     })
-      //     .then((result) => {
-      //       console.log(result);
-      //     })
-      //     .catch((err) => {
-      //       console.log(err);
-      //     });
-      // } else {
       client.messages
         .create({
           from: process.env.TWILIO_PHONE_NUMBER,
@@ -235,17 +219,18 @@ module.exports = {
           body: message,
         })
         .then((result) => {
+          console.log("SUCCESSFULLY SENT TWILIO MESSAGE");
           console.log(result);
         })
         .catch((err) => {
+          console.log("DIDN'T SEND TWILIO MESSAGE");
           console.log(err);
         });
-      // }
 
       return "Sent " + message;
     },
 
-    async setUserLocation(_, {location, userId}, context) {
+    async setUserLocation(_, { location, userId }, context) {
       try {
         checkUserAuth(context);
       } catch (error) {
@@ -261,7 +246,7 @@ module.exports = {
       return location;
     },
 
-    async toggleLocationOn(_, {userId}, context) {
+    async toggleLocationOn(_, { userId }, context) {
       try {
         checkUserAuth(context);
       } catch (error) {

@@ -166,39 +166,34 @@ module.exports = {
       var modifiedToken;
 
       if (tokens && detected === "stop") {
-        console.log("enters thief check");
         for (var currentToken of tokens) {
           if (transcription.includes(currentToken.token)) {
-            console.log("entering here 1");
-            console.log(currentToken.token);
             detected = "start";
             break;
-          } else {
+          }
+          /* // TODO uncomment the following to allow matching to stopwords, if keys don't directly match 
+          else {
+
             count = 0;
             modifiedToken = sw.removeStopwords(currentToken.token.split(" "));
-            // TODO take the current policeToken.token and remove all its common words, and create an array of the unique words left
+            
+            // Take the current policeToken.token and remove all its common words, and create an array of the unique words left
             // take the transcription and remove all its common words
             // See if any word from the policeToken.token is included in the transcription
-            console.log("modified thief token: " + modifiedToken);
+
             for (var word of modifiedToken) {
               if (transcription.includes(word)) {
-                console.log(
-                  "~~~~~~~~~~~~~~~~~~~~~entered~~~~~~~~~~~~~~~~~~~~~~~~"
-                );
 
-                // console.log(word);
                 count += 1;
               }
             }
-            // TODO if >=half of the words in the token match the transcription...
-
-            console.log("Count is " + count);
             if (count > modifiedToken.length / 2) {
               console.log("entering here 2");
               detected = "start";
               break;
             }
           }
+          */
         }
       }
 
@@ -226,9 +221,6 @@ module.exports = {
       if (startKey && startKey != "" && transcription.includes(startKey)) {
         detected = "start";
       }
-      // TODO check out the changes I made here for if the phrase doesn't match directly...
-      // if there are enough common (unique) words between a particular token and the transcription, then we also return "start"
-      // Need to test this more, and make sure it doesn't cause too many false positives
 
       detected = await module.exports.Mutation.matchToTokens(
         _,
