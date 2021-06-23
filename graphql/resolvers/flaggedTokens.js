@@ -221,9 +221,6 @@ module.exports = {
       if (startKey && startKey != "" && transcription.includes(startKey)) {
         detected = "start";
       }
-      // TODO check out the changes I made here for if the phrase doesn't match directly...
-      // if there are enough common (unique) words between a particular token and the transcription, then we also return "start"
-      // Need to test this more, and make sure it doesn't cause too many false positives
 
       detected = await module.exports.Mutation.matchToTokens(
         _,
