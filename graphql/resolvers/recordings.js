@@ -143,8 +143,8 @@ module.exports = {
       return recordingUrls;
     },
 
-    async removeRecordingFromAWS(_, { recordingUrl }, context) {
-      console.log("removeRecordingFromAWS entered");
+    async removeEventRecordingUrl(_, { recordingUrl }, context) {
+      console.log("removeEventRecordingUrl entered");
 
       await userResolvers.Mutation.authenticateUserByContext(_, {}, context);
       const { key } = AmazonS3URI(recordingUrl);
@@ -164,7 +164,7 @@ module.exports = {
       }
     },
 
-    async deleteEventRecordingGroup(_, { eventRecordingId }, context) {
+    async removeAndDeleteEventRecording(_, { eventRecordingId }, context) {
       console.log("deleteEventRecording entered");
 
       await userResolvers.Mutation.authenticateUserByContext(_, {}, context);
@@ -178,7 +178,7 @@ module.exports = {
         targetEventRecording.eventRecordingUrls.length != 0
       ) {
         for (var targetRecordingUrl of targetEventRecording.eventRecordingUrls) {
-          await module.exports.Mutation.removeRecordingFromAWS(
+          await module.exports.Mutation.removeEventRecordingUrl(
             _,
             { recordingUrl: targetRecordingUrl },
             context
@@ -207,7 +207,7 @@ module.exports = {
       }
     },
 
-    async deleteEventRecordingComponent(
+    async removeAndDeleteEventRecordingUrl(
       _,
       { eventRecordingId, recordingUrl },
       context
@@ -227,7 +227,7 @@ module.exports = {
         index = targetEventRecording.eventRecordingUrls.indexOf(recordingUrl);
         targetEventRecording.eventRecordingUrls.splice(index, 1);
         await targetEventRecording.save();
-        await module.exports.Mutation.removeRecordingFromAWS(
+        await module.exports.Mutation.removeEventRecordingUrl(
           _,
           { recordingUrl },
           context

@@ -32,8 +32,8 @@ module.exports = {
 
       const users = await User.aggregate(agg);
 
-      console.log("users:");
-      console.log(users);
+      // console.log("users:");
+      // console.log(users);
       const matchedUsers = []; // Need to get entire objects
       for (var user of users) {
         user = await User.findById(user._id);
