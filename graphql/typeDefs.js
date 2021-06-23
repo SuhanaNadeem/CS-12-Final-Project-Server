@@ -28,7 +28,7 @@ module.exports = gql`
     createdAt: DateTime!
     token: String
 
-    location: String # TODO: this is where you will store a user's location via a mutation (to be made) you call from the front end
+    location: String
     locationOn: Boolean
 
     friendIds: [String]
@@ -97,9 +97,6 @@ module.exports = gql`
     getFriends(userId: String!): [User]!
 
     getTranscriptionByUser(userId: String!): String!
-    # TODO  query getFriendLocations should take userId, call getFriends, and for each friend from getFriends' returned array, check if locationOn is true. If so, add the location to a list, friendLocations. Return friendLocations.
-    
-    # TODO  query getUserLocation should return the user's location ONLY IF locationOn is true
   }
 
   # actions
@@ -201,13 +198,11 @@ module.exports = gql`
       transcription: String!
     ): String!
 
-    # TODO create a mutation setUserLocation - to set the user location property to the location coords from the front end (hopefully a string argument works for that)
     setUserLocation(
       location: String!
       userId: String!
     ): String!
 
-    # TODO toggleLocationOn should take a boolean from the front end with userId, setting user's locationOn attribute to true if the argument is false and true otherwise
     toggleLocationOn(userId: String!): Boolean! # Returns boolean indicating whether location sharing is on or off after the mutation call
   }
 `;
