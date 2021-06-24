@@ -302,7 +302,7 @@ module.exports = {
           { transcription, userId },
           context
         );
-      const eventRecording = await module.exports.Mutation.addEventRecordingUrl(
+      await module.exports.Mutation.addEventRecordingUrl(
         _,
         {
           eventRecordingUrl,
@@ -311,7 +311,6 @@ module.exports = {
         },
         context
       );
-      console.log(eventRecording);
 
       console.log("handleDanger RETURNING:");
       console.log(detectedStatus);
