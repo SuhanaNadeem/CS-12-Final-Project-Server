@@ -136,6 +136,6 @@ module.exports = gql`
       transcription: String!
     ): String! # Matches flaggedToken objects associated with the given name to the given transcription. Returns whether to "start" or "stop" recording
     setUserLocation(location: String!, userId: String!): String! # Writes the strinigified JSON location string to the userId's User object. Returns given location string
-    toggleLocationOn(userId: String!): Boolean! # Returns boolean indicating whether location sharing is on or off after the mutation call
+    toggleLocationOn(userId: String!): Boolean! # Returns boolean indicating whether location sharing is on or off after the mutation toggles it
   }
 `;
