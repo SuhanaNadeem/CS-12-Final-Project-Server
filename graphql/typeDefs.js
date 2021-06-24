@@ -86,25 +86,20 @@ module.exports = gql`
       finish: Boolean!
     ): [String]
 
-    transcribeRecording(recordingBytes: String!): String!
-
+    transcribeRecording(recordingBytes: String!): String! # Returns transcription of recording in string format
     authenticateUserByContext: String
-    detectDanger(recordingBytes: String, userId: String!): String!
+    detectDanger(recordingBytes: String, userId: String!): String! # Indicates whether danger is detected; returns strings "start" or "stop" to trigger recording
     handleDanger(
       recordingBytes: String
       userId: String!
       eventRecordingUrl: String
-    ): String!
-
-    matchStartTranscription(transcription: String!, userId: String!): String!
-    matchStopTranscription(transcription: String!, userId: String!): String!
-
-    createPoliceTokens(tokens: String!): [String]
-    createThiefTokens(tokens: String!): [String]
-
-    deletePoliceTokens(tokens: String!): Boolean!
-    deleteThiefTokens(tokens: String!): Boolean!
-
+    ): String! # Checks whether or not to stop recording after it has been started; returns strings "stop" or "panic"
+    matchStartTranscription(transcription: String!, userId: String!): String! # Matches keywords to start recording (start key, police/thief tokens). Returns "start" or "stop"
+    matchStopTranscription(transcription: String!, userId: String!): String! # Matches keywords to stop recording (stop/panic key). Returns "stop" or "panic"
+    createPoliceTokens(tokens: String!): [String] # Creates a flaggedToken object with name: "Police" and given token and saves it to the database
+    createThiefTokens(tokens: String!): [String] # Creates a flaggedToken object with name: "Thief" and given token and saves it to the database
+    deletePoliceTokens(tokens: String!): Boolean! # Deletes all occurences of police tokens in database that have the given tokens. Returns true if any were removed, false otherwise
+    deleteThiefTokens(tokens: String!): Boolean! # Deletes all occurences of thief tokens in database that have the given tokens. Returns true if any were removed, false otherwise
     # "Remove" refers to deleting from AWS. "Delete" refers to deleting from MongoDB.
     removeEventRecordingUrl(recordingUrl: String!): String # Remove individual url from AWS
     removeAndDeleteEventRecording(eventRecordingId: String!): String # Delete entire event recording group, with all its urls removed from AWS first
@@ -113,41 +108,34 @@ module.exports = gql`
       recordingUrl: String!
     ): String # Delete one url from event recording group, and remove it from AWS
     deleteEventRecording(eventRecordingId: String!): String # delete an event recording group, without removing its links from AWS
-    sendFriendRequest(requesterId: String!, receiverId: String!): [String]
-    addFriend(userId: String!, requesterId: String!): [String]
-    removeFriend(userId: String!, friendId: String!): [String]
-
+    sendFriendRequest(requesterId: String!, receiverId: String!): [String] # Sends a friend request from the requesterId User to receiverId User
+    addFriend(userId: String!, requesterId: String!): [String] # Adds requesterId User to userId User's friendlist, and vice versa ONLY if there was a request made
+    removeFriend(userId: String!, friendId: String!): [String] # Removes userId User from friendId User's friendlist and vice versa only if they are friends
     setMessageInfo(
       userId: String!
       newPanicMessage: String
       newPanicPhone: String
-    ): User
-
+    ): User # Updates the panic message information in the given userId's User object in the database, returns userId's User object
     sendTwilioSMS(
       phoneNumber: String!
       message: String!
       eventRecordingUrl: String
-    ): String!
-
+    ): String! # Sends an SMS message using Twilio, returns the message sent as a string
     addToFinishedEventRecording(
       eventRecordingUrl: String!
       userId: String!
-    ): [String]
+    ): [String] # Adds an eventRecordingUrl to a finished eventRecording object, returns updated eventRecordingUrls of eventRecording object
     addToUnfinishedEventRecording(
       eventRecordingUrl: String!
       userId: String!
-    ): [String]
-
-    setTranscriptionByUser(userId: String!, transcription: String!): String
-
+    ): [String] # Adds an eventRecordingUrl to an unfinished eventRecording object, returns updated eventRecordingUrls of eventRecording object
+    setTranscriptionByUser(userId: String!, transcription: String!): String # Replaces a previous Transcription object associated with the given user or creates a new one with the given transcription
     matchToTokens(
       detected: String!
       name: String!
       transcription: String!
-    ): String!
-
-    setUserLocation(location: String!, userId: String!): String!
-
+    ): String! # Matches flaggedToken objects associated with the given name to the given transcription. Returns whether to "start" or "stop" recording
+    setUserLocation(location: String!, userId: String!): String! # Writes the strinigified JSON location string to the userId's User object. Returns given location string
     toggleLocationOn(userId: String!): Boolean! # Returns boolean indicating whether location sharing is on or off after the mutation call
   }
 `;
