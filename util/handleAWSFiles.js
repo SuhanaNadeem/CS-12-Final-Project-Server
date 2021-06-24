@@ -38,37 +38,6 @@ async function doesS3URLExist(imageUrl) {
 }
 module.exports.doesS3URLExist = doesS3URLExist;
 
-async function handleCsFileUpload(file) {
-  const { createReadStream, filename } = await file;
-  const metaData = getContentTypeByFile(filename);
-
-  const stream = createReadStream();
-
-  const key = nanoid();
-
-  return new Promise((resolve, reject) => {
-    s3.upload(
-      {
-        ...s3DefaultParams,
-        Bucket: process.env.S3_CS_BUCKET,
-        Body: stream,
-        Key: `${key}/${filename}`,
-        ContentType: metaData.type,
-        ACL: "public-read",
-      },
-      (err, data) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(data);
-        }
-      }
-    );
-  });
-}
-
-module.exports.handleCsFileUpload = handleCsFileUpload;
-
 async function handleCsFileDelete(fileKey) {
   return new Promise((resolve, reject) => {
     s3.deleteObject(

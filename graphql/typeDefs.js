@@ -125,19 +125,17 @@ module.exports = gql`
     setStartKey(userId: String!, startKey: String!): String # Start recording manually
     setPanicKey(userId: String!, panicKey: String!): String # Panic: stop recording, "send" the recording, call
     setStopKey(userId: String!, stopKey: String!): String # Stop the recording (other option is button)
-    uploadCsFile(file: Upload!): S3Object!
     deleteCsFile(fileKey: String!): String!
 
-    # Add url to EventRecording object
+    # Add URL to EventRecording object
     addEventRecordingUrl(
       eventRecordingUrl: String!
       userId: String!
       finish: Boolean!
     ): [String]
-    # transcribeEventRecording(recordingFileKey: String!): String!
+
     transcribeRecording(recordingBytes: String!): String!
 
-    # getEventRecordingUrl(eventRecordingUrl: String!, userId: String!): [String]
     authenticateUserByContext: String
     detectDanger(recordingBytes: String, userId: String!): String!
     handleDanger(

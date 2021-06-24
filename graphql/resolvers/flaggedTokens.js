@@ -162,8 +162,8 @@ module.exports = {
     async matchToTokens(_, { detected, transcription, name }, context) {
       const tokens = await FlaggedToken.find({ name });
 
-      var count;
-      var modifiedToken;
+      // var count;
+      // var modifiedToken;
 
       if (tokens && detected === "stop") {
         for (var currentToken of tokens) {
@@ -183,12 +183,10 @@ module.exports = {
 
             for (var word of modifiedToken) {
               if (transcription.includes(word)) {
-
                 count += 1;
               }
             }
             if (count > modifiedToken.length / 2) {
-              console.log("entering here 2");
               detected = "start";
               break;
             }
@@ -213,11 +211,6 @@ module.exports = {
 
       var detected = "stop";
 
-      const modifiedTranscription = sw.removeStopwords(
-        transcription.split(" ")
-      );
-
-      console.log("modified transcription: " + modifiedTranscription);
       if (startKey && startKey != "" && transcription.includes(startKey)) {
         detected = "start";
       }
