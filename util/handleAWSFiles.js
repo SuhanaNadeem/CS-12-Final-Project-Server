@@ -1,11 +1,6 @@
 const AWS = require("aws-sdk");
-// cs each image in it's own unique folder to avoid name duplicates
-const { customAlphabet } = require("nanoid");
-const nanoid = customAlphabet("0123456789", 10);
-
 const AmazonS3URI = require("amazon-s3-uri");
 
-// load config data from .env file
 require("dotenv").config();
 
 AWS.config.update({
@@ -65,38 +60,3 @@ async function getCsFile(fileKey) {
   });
 }
 module.exports.getCsFile = getCsFile;
-
-// function getContentTypeByFile(fileName) {
-//   var rc = { type: "image/jpeg", extension: ".jpeg" };
-//   var fn = fileName.toLowerCase();
-
-//   if (fn.indexOf(".html") >= 0) {
-//     rc.type = "text/html";
-//     rc.extension = ".html";
-//   } else if (fn.indexOf(".css") >= 0) {
-//     rc.type = "text/css";
-//     rc.extension = ".css";
-//   } else if (fn.indexOf(".json") >= 0) {
-//     rc.type = "application/json";
-//     rc.extension = ".json";
-//   } else if (fn.indexOf(".js") >= 0) {
-//     rc.type = "application/x-javascript";
-//     rc.extension = ".js";
-//   } else if (fn.indexOf(".png") >= 0) {
-//     rc.type = "image/png";
-//     rc.extension = ".png";
-//   } else if (fn.indexOf(".jpg") >= 0) {
-//     rc.type = "image/jpg";
-//     rc.extension = ".jpg";
-//   } else if (fn.indexOf(".gif") >= 0) {
-//     rc.type = "image/gif";
-//     rc.type = ".gif";
-//   } else if (fn.indexOf(".caf") >= 0) {
-//     rc.type = "audio/caf";
-//     rc.type = ".caf";
-//   } else if (fn.indexOf(".wav") >= 0) {
-//     rc.type = "audio/wav";
-//     rc.type = ".wav";
-//   }
-//   return rc;
-// }

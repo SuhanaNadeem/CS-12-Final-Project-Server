@@ -1,3 +1,5 @@
+/* Ensure user's login and signup credentials have a valid email and password, etc. */
+
 const validator = require("validator");
 
 module.exports.validateUserLoginInput = (email, password) => {
@@ -50,15 +52,10 @@ module.exports.validateUserEditInput = (
 ) => {
   const errors = {};
 
-  // // neither pass or email was given
-  // if ((!newEmail || newEmail === "") && (!newPassword || newPassword === "")) {
-  //   errors.newEmail = "New email or password must be provided";
-  // }
-  // email given but DNE
   if (newEmail && newEmail !== "" && !validator.isEmail(newEmail)) {
     errors.newEmail = newEmail;
   }
-  // pass given but do not match
+
   if (newPassword && newPassword !== "" && newPassword != newConfirmPassword) {
     errors.newPassword = "Passwords don't match";
   }
