@@ -3,6 +3,7 @@ const { gql } = require("apollo-server");
 module.exports = gql`
   scalar DateTime
 
+  # Admin user object, has access to certain mutations in the backend
   type Admin {
     id: String!
 
@@ -14,6 +15,7 @@ module.exports = gql`
     token: String
   }
 
+  # Regular user type, holds key information for all users relating to login, friends, panic keys and messages
   type User {
     id: String!
 
@@ -28,7 +30,7 @@ module.exports = gql`
     createdAt: DateTime!
     token: String
 
-    location: String # TODO: this is where you will store a user's location via a mutation (to be made) you call from the front end
+    location: String
     locationOn: Boolean
 
     friendIds: [String]
@@ -38,6 +40,7 @@ module.exports = gql`
     panicPhone: String
   }
 
+  # Unused
   type File {
     filename: String!
     mimetype: String!
@@ -46,6 +49,7 @@ module.exports = gql`
     createdAt: DateTime!
   }
 
+  # Unused
   type S3Object {
     ETag: String
     Location: String!
@@ -53,6 +57,7 @@ module.exports = gql`
     Bucket: String!
   }
 
+  # Type used to store detection phrases said by both Police or Thieves
   type FlaggedToken {
     name: String! # "Police" or "Thief"
     token: String! # word or phrase
@@ -67,6 +72,7 @@ module.exports = gql`
     createdAt: DateTime!
   }
 
+  # Used to store transcriptions and metadata like associated userId and a timestamp
   type Transcription {
     id: String!
     userId: String!
@@ -76,30 +82,23 @@ module.exports = gql`
 
   # retrieve information
   type Query {
-    getAdmin: Admin!
-    getAdminById(adminId: String!): Admin!
-
-    getUser: User!
-    getUsers: [User]!
-    getUserById(userId: String!): User!
-
+    getAdmin: Admin! # Get admin object of currently authenticated admin
+    getAdminById(adminId: String!): Admin! # Get an admin object by id
+    getUser: User! # Get user object of currently authenticated user
+    getUsers: [User]! # Get all users in database
+    getUserById(userId: String!): User! # Get user by specific user id
     # getEventRecordingTriggered(userId: String!): Boolean!
-    getPoliceTokens: [String]!
-    getThiefTokens: [String]!
-    getEventRecordingsByUser(userId: String!): [EventRecording]!
-    getUserMatches(name: String!): [User]!
-
+    getPoliceTokens: [String]! # Get an array of all police tokens in the database in string format
+    getThiefTokens: [String]! # Get an array of all thief tokens in the database in string format
+    getEventRecordingsByUser(userId: String!): [EventRecording]! # Retrieve an array of event recording groups by user id
+    getUserMatches(name: String!): [User]! # Used in friend search system - searches all users in database with passed string in their name
     # user will search for another user by name (getUserMatches) and be
     # able to send any of the matches a friend request (sendFriendRequest - adds sender's userId to would-be-friend's requests)
     # users will be able to see their friendRequests (getFriendRequests) and add any of them (addFriend - add friend)
 
-    getFriendRequests(userId: String!): [User]!
-    getFriends(userId: String!): [User]!
-
-    getTranscriptionByUser(userId: String!): String!
-    # TODO  query getFriendLocations should take userId, call getFriends, and for each friend from getFriends' returned array, check if locationOn is true. If so, add the location to a list, friendLocations. Return friendLocations.
-
-    # TODO  query getUserLocation should return the user's location ONLY IF locationOn is true
+    getFriendRequests(userId: String!): [User]! # Get an array of user objects who the given user has sent friend requests to
+    getFriends(userId: String!): [User]! # Get all friends of a given user, identified by their id
+    getTranscriptionByUser(userId: String!): String! # With the given userId, returns the latest transcription from the user
   }
 
   # actions
@@ -109,19 +108,17 @@ module.exports = gql`
       email: String!
       password: String!
       confirmPassword: String!
-    ): Admin!
-    loginAdmin(email: String!, password: String!): Admin!
-    deleteAdmin(adminId: String!): String
-
+    ): Admin! # Creates a new admin object with given arguments and saves it in the database
+    loginAdmin(email: String!, password: String!): Admin! # Searches for an admin in the database with said credentials and returns that object
+    deleteAdmin(adminId: String!): String # Removes an admin from the database, searching by adminId
     signupUser(
       name: String!
       email: String!
       password: String!
       confirmPassword: String!
-    ): User!
-    loginUser(email: String!, password: String!): User!
-    deleteUser(userId: String!): String
-
+    ): User! # Creates a user object with passed arguments and saves it to the database
+    loginUser(email: String!, password: String!): User! # Returns a User object of the user who's credentials match the passed arguments
+    deleteUser(userId: String!): String # Removes a User from the database with given userId
     setStartKey(userId: String!, startKey: String!): String # Start recording manually
     setPanicKey(userId: String!, panicKey: String!): String # Panic: stop recording, "send" the recording, call
     setStopKey(userId: String!, stopKey: String!): String # Stop the recording (other option is button)
@@ -200,10 +197,8 @@ module.exports = gql`
       transcription: String!
     ): String!
 
-    # TODO create a mutation setUserLocation - to set the user location property to the location coords from the front end (hopefully a string argument works for that)
     setUserLocation(location: String!, userId: String!): String!
 
-    # TODO toggleLocationOn should take a boolean from the front end with userId, setting user's locationOn attribute to true if the argument is false and true otherwise
     toggleLocationOn(userId: String!): Boolean! # Returns boolean indicating whether location sharing is on or off after the mutation call
   }
 `;
