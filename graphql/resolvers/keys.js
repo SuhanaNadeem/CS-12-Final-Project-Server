@@ -58,8 +58,6 @@ module.exports = {
 
     // Store phrase that will allow user to verbally stop and send an alert text about an event recording
     async setPanicKey(_, { userId, panicKey }, context) {
-      console.log("Enters setPanicKey");
-
       await userResolvers.Mutation.authenticateUserByContext(_, {}, context);
 
       const targetUser = await User.findById(userId);
