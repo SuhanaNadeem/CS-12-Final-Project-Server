@@ -1,52 +1,90 @@
-const { UserInputError, AuthenticationError } = require("apollo-server");
+const { UserInputError } = require("apollo-server");
+const checkUserAuth = require("../../util/checkUserAuth");
 
 const User = require("../../models/User");
-const checkUserAuth = require("../../util/checkUserAuth");
 const FlaggedToken = require("../../models/FlaggedToken");
+
 const userResolvers = require("./users");
 
 sw = require("stopword");
 
 module.exports = {
   Query: {
+    // Get an array of all police tokens in the database in string format
     async getPoliceTokens(_, {}, context) {
-      console.log("Entered getPoliceTokens");
+      await userResolvers.Mutation.authenticateUserByContext(_, {}, context);
+
       const policeTokens = await FlaggedToken.find({ name: "Police" });
       var stringTokens = [];
+
+      // Extract actual token string from each token object
       for (var token of policeTokens) {
         stringTokens.push(token.token);
       }
-      console.log(stringTokens);
       return stringTokens;
     },
 
+    // Get an array of all thief tokens in the database in string format
     async getThiefTokens(_, {}, context) {
-      console.log("Entered getThiefTokens");
+      await userResolvers.Mutation.authenticateUserByContext(_, {}, context);
+
       const thiefTokens = await FlaggedToken.find({ name: "Thief" });
       var stringTokens = [];
+      // Extract actual token string from each token object
+
       for (var token of thiefTokens) {
         stringTokens.push(token.token);
       }
-      console.log(stringTokens);
       return stringTokens;
     },
   },
   Mutation: {
-    async matchStopTranscription(_, { transcription, userId }, context) {
-      console.log("matchTranscription entered");
-
+    // Matches keywords to start recording (start key, police/thief tokens). Returns "start" if detected, otherwise maintains "stop"
+    async matchStartTranscription(_, { transcription, userId }, context) {
       await userResolvers.Mutation.authenticateUserByContext(_, {}, context);
-
       const targetUser = await User.findById(userId);
       if (!targetUser) {
         throw new UserInputError("Invalid user ID");
       }
+      // Re-format for matching
+      transcription = transcription.toLowerCase();
+      const startKey = targetUser.startKey.toLowerCase();
+
+      var detected = "stop"; // When this mutation is called, the state of the event recording is "stop"
+
+      if (startKey && startKey != "" && transcription.includes(startKey)) {
+        detected = "start";
+      }
+
+      detected = await module.exports.Mutation.matchToTokens(
+        _,
+        { name: "Police", detected, transcription },
+        context
+      );
+      detected = await module.exports.Mutation.matchToTokens(
+        _,
+        { name: "Thief", detected, transcription },
+        context
+      );
+
+      return detected;
+    },
+
+    // Matches keywords to stop recording (stop/panic key). Returns "stop" or "panic" if detected, otherwise maintains "start"
+    async matchStopTranscription(_, { transcription, userId }, context) {
+      await userResolvers.Mutation.authenticateUserByContext(_, {}, context);
+      const targetUser = await User.findById(userId);
+      if (!targetUser) {
+        throw new UserInputError("Invalid user ID");
+      }
+
+      // Re-format for matching
       const stopKey = targetUser.stopKey.toLowerCase();
       const panicKey = targetUser.panicKey.toLowerCase();
-
       transcription = transcription.toLowerCase();
 
-      var detected = "start";
+      var detected = "start"; // When this mutation is called, the state of the event recording is "stop"
+
       if (stopKey && stopKey != "" && transcription.includes(stopKey)) {
         detected = "stop";
       } else if (
@@ -60,23 +98,32 @@ module.exports = {
       return detected;
     },
 
+    // Creates a flaggedToken object with name: "Police" and given token and saves it to the database
     async createPoliceTokens(_, { tokens }, context) {
-      console.log("createPoliceTokens entered");
+      try {
+        checkUserAuth(context);
+      } catch (error) {
+        throw new Error(error);
+      }
+
       await userResolvers.Mutation.authenticateUserByContext(_, {}, context);
+
       if (!tokens || tokens === "") {
         throw new UserInputError("Invalid input");
       }
+
       tokens = tokens.toLowerCase();
-      var tokenArray = tokens.split("&");
+
+      var tokenArray = tokens.split("&"); // Split at indicator
       var targetToken;
       var addedTokens = [];
+
       for (var t of tokenArray) {
-        targetToken = await FlaggedToken.find({ token: t });
-        // <1 of the specified token(s) already exist(s)?
+        targetToken = await FlaggedToken.find({ token: t }); // Get tokens matching current
 
         if (!targetToken || targetToken.length === 0) {
+          // <1 of the specified token(s) already exist(s)
           addedTokens.push(t);
-          console.log(t);
           const newPoliceToken = new FlaggedToken({
             name: "Police",
             token: t,
@@ -88,23 +135,33 @@ module.exports = {
       return addedTokens;
     },
 
+    // Creates a flaggedToken object with name: "Thief" and given token and saves it to the database
     async createThiefTokens(_, { tokens }, context) {
-      console.log("createThiefTokens entered");
+      try {
+        checkUserAuth(context);
+      } catch (error) {
+        throw new Error(error);
+      }
       await userResolvers.Mutation.authenticateUserByContext(_, {}, context);
+
       if (!tokens || tokens === "") {
         throw new UserInputError("Invalid input");
       }
+
       tokens = tokens.toLowerCase();
-      var tokenArray = tokens.split("&");
+
+      var tokenArray = tokens.split("&"); // Split at indicator
       var targetToken;
       var addedTokens = [];
+
       for (var t of tokenArray) {
-        targetToken = await FlaggedToken.find({ token: t });
-        // <1 of the specified token(s) already exist(s)?
+        targetToken = await FlaggedToken.find({ token: t }); // Get tokens matching current
 
         if (!targetToken || targetToken.length === 0) {
+          // <1 of the specified token(s) already exist(s)
           addedTokens.push(t);
 
+          // Add new token
           const newThiefToken = new FlaggedToken({
             name: "Thief",
             token: t,
@@ -115,7 +172,10 @@ module.exports = {
       return tokenArray;
     },
 
+    // Deletes all occurences of police tokens in database that have the given tokens. Returns true if any were removed, false otherwise
     async deletePoliceTokens(_, { tokens }, context) {
+      await userResolvers.Mutation.authenticateUserByContext(_, {}, context);
+
       const tokensToRemove = tokens.split("&");
       const policeTokens = await FlaggedToken.find({ name: "Police" });
 
@@ -137,7 +197,10 @@ module.exports = {
       return tokenRemoved;
     },
 
+    // Deletes all occurences of thief tokens in database that have the given tokens. Returns true if any were removed, false otherwise
     async deleteThiefTokens(_, { tokens }, context) {
+      await userResolvers.Mutation.authenticateUserByContext(_, {}, context);
+
       const tokensToRemove = tokens.split("&");
       const thiefTokens = await FlaggedToken.find({ name: "Thief" });
 
@@ -159,19 +222,24 @@ module.exports = {
       return tokenRemoved;
     },
 
+    // Matches flaggedToken objects associated with the given name to the given transcription. Returns whether to "start" or "stop" recording
     async matchToTokens(_, { detected, transcription, name }, context) {
       const tokens = await FlaggedToken.find({ name });
 
+      /* // TODO (1 of 2) Uncomment the following to allow matching to stopwords, if keys don't directly match
       // var count;
-      // var modifiedToken;
+      // var modifiedToken; */
 
       if (tokens && detected === "stop") {
         for (var currentToken of tokens) {
+          // Check if transcription directly matches any token
           if (transcription.includes(currentToken.token)) {
             detected = "start";
             break;
           }
-          /* // TODO uncomment the following to allow matching to stopwords, if keys don't directly match 
+
+          /* // TODO (2 of 2) Uncomment the following to allow matching to stopwords, if keys don't directly match 
+          
           else {
 
             count = 0;
@@ -194,37 +262,6 @@ module.exports = {
           */
         }
       }
-
-      return detected;
-    },
-
-    async matchStartTranscription(_, { transcription, userId }, context) {
-      console.log("matchTranscription entered");
-
-      await userResolvers.Mutation.authenticateUserByContext(_, {}, context);
-      const targetUser = await User.findById(userId);
-      if (!targetUser) {
-        throw new UserInputError("Invalid user ID");
-      }
-      transcription = transcription.toLowerCase();
-      const startKey = targetUser.startKey.toLowerCase();
-
-      var detected = "stop";
-
-      if (startKey && startKey != "" && transcription.includes(startKey)) {
-        detected = "start";
-      }
-
-      detected = await module.exports.Mutation.matchToTokens(
-        _,
-        { name: "Police", detected, transcription },
-        context
-      );
-      detected = await module.exports.Mutation.matchToTokens(
-        _,
-        { name: "Thief", detected, transcription },
-        context
-      );
 
       return detected;
     },

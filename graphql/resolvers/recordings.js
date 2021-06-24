@@ -1,12 +1,9 @@
-const { UserInputError, AuthenticationError } = require("apollo-server");
+const { UserInputError } = require("apollo-server");
 
 const User = require("../../models/User");
 const EventRecording = require("../../models/EventRecording");
 
-const checkUserAuth = require("../../util/checkUserAuth");
-
 const transcriptionResolvers = require("./transcriptions");
-
 const flaggedTokenResolvers = require("./flaggedTokens");
 const fileResolvers = require("./files");
 const userResolvers = require("./users");
@@ -15,30 +12,13 @@ const AmazonS3URI = require("amazon-s3-uri");
 
 module.exports = {
   Query: {
-    // async getEventRecordingTriggered(_, { userId }, context) {
-    //   try {
-    //     checkUserAuth(context);
-    //   } catch (error) {
-    //     throw new AuthenticationError();
-    //   }
-    //   const targetUser = await User.findById(userId);
-    //   if (!targetUser) {
-    //     throw new UserInputError("Invalid user ID");
-    //   }
-    //   const eventRecordingTriggered = targetUser.eventRecordingTriggered;
-    //   return eventRecordingTriggered;
-    // },
+    // Retrieve an array of event recording groups by user ID
     async getEventRecordingsByUser(_, { userId }, context) {
-      console.log("comes in here in getEventRecordingsByUser");
-
-      try {
-        checkUserAuth(context);
-      } catch (error) {
-        throw new Error(error);
-      }
+      await userResolvers.Mutation.authenticateUserByContext(_, {}, context);
 
       const targetUser = await User.findById(userId);
       const eventRecordings = await EventRecording.find({ userId });
+
       if (!targetUser || !eventRecordings) {
         throw new UserInputError("Invalid input");
       } else {
@@ -47,11 +27,16 @@ module.exports = {
     },
   },
   Mutation: {
+    // Adds an eventRecordingUrl to an unfinished eventRecording object and finishes it, returns updated eventRecordingUrls of eventRecording object
     async addToFinishedEventRecording(
       _,
       { eventRecordingUrl, userId },
       context
     ) {
+      // "Finished" means status is "stop" or "panic"
+
+      // Must add to/create an unfinished EventRecording object, and set its finished property to true
+
       const targetEventRecording = await EventRecording.findOne({
         finished: false,
         userId,
@@ -59,14 +44,12 @@ module.exports = {
 
       if (targetEventRecording) {
         // Detected "stop" or "panic" and has >0 associated recordings
-        console.log(1);
         targetEventRecording.eventRecordingUrls.push(eventRecordingUrl);
         targetEventRecording.finished = true;
         await targetEventRecording.save();
 
         return targetEventRecording.eventRecordingUrls;
       } else {
-        console.log(2);
         // Detected "stop" or "panic" and has 0 associated recordings
         const newEventRecording = new EventRecording({
           eventRecordingUrls: [],
@@ -79,24 +62,27 @@ module.exports = {
         return newEventRecording.eventRecordingUrls;
       }
     },
+
+    // Adds an eventRecordingUrl to an unfinished eventRecording object, returns updated eventRecordingUrls of eventRecording object
     async addToUnfinishedEventRecording(
       _,
       { eventRecordingUrl, userId },
       context
     ) {
+      // "Unfinished" means status is "start"
+
+      // Must add to/create an unfinished EventRecording object, and keep its finished property to false
       const targetEventRecording = await EventRecording.findOne({
         finished: false,
         userId,
       });
 
       if (targetEventRecording) {
-        console.log(3);
         // Detected "start" and has >0 associated recordings
         targetEventRecording.eventRecordingUrls.push(eventRecordingUrl);
         await targetEventRecording.save();
         return targetEventRecording.eventRecordingUrls;
       } else {
-        console.log(4);
         // Detected "start" and has 0 associated recordings
         const newEventRecording = new EventRecording({
           eventRecordingUrls: [],
@@ -109,13 +95,13 @@ module.exports = {
         return newEventRecording.eventRecordingUrls;
       }
     },
+
+    // Add URL to the latest EventRecording object
     async addEventRecordingUrl(
       _,
       { eventRecordingUrl, userId, finish },
       context
     ) {
-      console.log("addEventRecordingUrl entered");
-
       await userResolvers.Mutation.authenticateUserByContext(_, {}, context);
 
       const targetUser = await User.findById(userId);
@@ -126,6 +112,7 @@ module.exports = {
       var recordingUrls;
 
       if (finish) {
+        // "Finished" means status has become "stop" or "panic"
         recordingUrls =
           await module.exports.Mutation.addToFinishedEventRecording(
             _,
@@ -133,6 +120,7 @@ module.exports = {
             context
           );
       } else {
+        // "Unfinished" means status has become "start"
         recordingUrls =
           await module.exports.Mutation.addToUnfinishedEventRecording(
             _,
@@ -140,14 +128,15 @@ module.exports = {
             context
           );
       }
+
       return recordingUrls;
     },
 
+    // Remove individual URL from AWS
     async removeEventRecordingUrl(_, { recordingUrl }, context) {
-      console.log("removeEventRecordingUrl entered");
-
       await userResolvers.Mutation.authenticateUserByContext(_, {}, context);
-      const { key } = AmazonS3URI(recordingUrl);
+
+      const { key } = AmazonS3URI(recordingUrl); // Get the AWS fileKey of the recording
 
       if (recordingUrl && recordingUrl !== "" && key) {
         await fileResolvers.Mutation.removeAWSFile(
@@ -164,9 +153,8 @@ module.exports = {
       }
     },
 
+    // Delete entire event recording group, with all its URLs removed from AWS first
     async removeAndDeleteEventRecording(_, { eventRecordingId }, context) {
-      console.log("deleteEventRecording entered");
-
       await userResolvers.Mutation.authenticateUserByContext(_, {}, context);
 
       const targetEventRecording = await EventRecording.findById(
@@ -177,6 +165,7 @@ module.exports = {
         targetEventRecording.eventRecordingUrls &&
         targetEventRecording.eventRecordingUrls.length != 0
       ) {
+        // Remove each URL from AWS
         for (var targetRecordingUrl of targetEventRecording.eventRecordingUrls) {
           await module.exports.Mutation.removeEventRecordingUrl(
             _,
@@ -184,15 +173,16 @@ module.exports = {
             context
           );
         }
+
+        // Remove EventRecording object
         await targetEventRecording.delete();
 
         return "Deleted successfully";
       }
     },
 
+    // Delete an event recording group, without removing its links from AWS
     async deleteEventRecording(_, { eventRecordingId }, context) {
-      console.log("deleteEventRecording entered");
-
       await userResolvers.Mutation.authenticateUserByContext(_, {}, context);
 
       const targetEventRecording = await EventRecording.findById(
@@ -207,13 +197,12 @@ module.exports = {
       }
     },
 
+    // Delete one URL from event recording group, and remove it from AWS
     async removeAndDeleteEventRecordingUrl(
       _,
       { eventRecordingId, recordingUrl },
       context
     ) {
-      console.log("deleteEventRecording entered");
-
       await userResolvers.Mutation.authenticateUserByContext(_, {}, context);
 
       const targetEventRecording = await EventRecording.findById(
@@ -224,9 +213,12 @@ module.exports = {
         targetEventRecording &&
         targetEventRecording.eventRecordingUrls.includes(recordingUrl)
       ) {
+        // Delete the URL from the EventRecording group
         index = targetEventRecording.eventRecordingUrls.indexOf(recordingUrl);
         targetEventRecording.eventRecordingUrls.splice(index, 1);
         await targetEventRecording.save();
+
+        // Remove the URL from AWS
         await module.exports.Mutation.removeEventRecordingUrl(
           _,
           { recordingUrl },
@@ -237,20 +229,17 @@ module.exports = {
       }
     },
 
+    // Indicates whether danger is detected; returns strings "start" to trigger recording if needed, otherwise "stop"
     async detectDanger(_, { recordingBytes, userId }, context) {
-      console.log();
-      console.log(
-        "****************************************************************"
-      );
-
-      console.log("detectdanger entered");
-
+      console.log("detectDanger ENTERED");
       await userResolvers.Mutation.authenticateUserByContext(_, {}, context);
 
       const targetUser = await User.findById(userId);
       if (!targetUser || !recordingBytes || recordingBytes === "") {
         throw new UserInputError("Invalid user ID or file key");
       }
+
+      // Transcribe the recording by bytes
       const transcription =
         await transcriptionResolvers.Mutation.transcribeRecording(
           _,
@@ -258,8 +247,10 @@ module.exports = {
           context
         );
 
-      console.log("Transcription");
+      console.log("detectDanger TRANSCRIBED:");
       console.log(transcription);
+
+      // Match the transcription to get new status (start, stop, panic)
       const detectedStatus =
         await flaggedTokenResolvers.Mutation.matchStartTranscription(
           _,
@@ -267,29 +258,19 @@ module.exports = {
           context
         );
 
-      console.log();
-      console.log(
-        "___________________________exiting detectDanger____________________"
-      );
-      console.log();
-      console.log("returning in detectDanger");
+      console.log("detectDanger RETURNING:");
       console.log(detectedStatus);
       return detectedStatus;
     },
 
+    // Checks whether or not to stop recording after it has been started; returns strings "stop" or "panic" if needed, otherwise "start"
     async handleDanger(
       _,
       { recordingBytes, userId, eventRecordingUrl },
       context
     ) {
-      console.log(
-        "//////////////////////////////////////////////////////////////"
-      );
-      console.log();
-      console.log("handledanger entered");
-      console.log(eventRecordingUrl);
+      console.log("handleDanger ENTERED");
 
-      console.log(userId);
       await userResolvers.Mutation.authenticateUserByContext(_, {}, context);
 
       const targetUser = await User.findById(userId);
@@ -302,12 +283,8 @@ module.exports = {
       ) {
         throw new UserInputError("Invalid user ID or file key");
       }
-      // const transcription = await module.exports.Mutation.transcribeRecording(
-      //   _,
-      //   { recordingBytes, userId },
-      //   context
-      // );
 
+      // Transcribe the recording by bytes
       const transcription =
         await transcriptionResolvers.Mutation.transcribeRecording(
           _,
@@ -315,9 +292,10 @@ module.exports = {
           context
         );
 
-      console.log("Transcription");
+      console.log("handleDanger TRANSCRIBED:");
       console.log(transcription);
 
+      // Match the transcription to get new status (start, stop, panic)
       const detectedStatus =
         await flaggedTokenResolvers.Mutation.matchStopTranscription(
           _,
@@ -334,16 +312,9 @@ module.exports = {
         context
       );
       console.log(eventRecording);
-      // return detectedStatus;
 
-      console.log("event recording returning...");
+      console.log("handleDanger RETURNING:");
       console.log(detectedStatus);
-
-      console.log();
-      console.log(
-        "___________________________exiting handleDanger____________________"
-      );
-      console.log();
 
       return detectedStatus;
     },

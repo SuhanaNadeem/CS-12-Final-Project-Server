@@ -7,12 +7,13 @@ const transcriptionResolvers = require("./transcriptions");
 
 const { GraphQLDateTime } = require("graphql-iso-date");
 
+/* This file exports resolvers made to the server. */
+
 module.exports = {
   DateTime: GraphQLDateTime,
   Query: {
     ...userResolvers.Query,
     ...recordingResolvers.Query,
-    ...keyResolvers.Query,
     ...flaggedTokenResolvers.Query,
     ...friendResolvers.Query,
     ...transcriptionResolvers.Query,
