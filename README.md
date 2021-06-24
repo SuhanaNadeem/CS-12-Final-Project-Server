@@ -1,4 +1,4 @@
-# Street Guard Client
+# Street Guard Server
 
 ### Usage
 
