@@ -1,11 +1,5 @@
 const { UserInputError, AuthenticationError } = require("apollo-server");
 
-const SECRET_KEY = process.env.SECRET_USER_KEY;
-
-const {
-  validateUserRegisterInput,
-  validateUserLoginInput,
-} = require("../../util/validators");
 const User = require("../../models/User");
 
 const checkUserAuth = require("../../util/checkUserAuth");

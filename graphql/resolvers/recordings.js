@@ -150,7 +150,7 @@ module.exports = {
       const { key } = AmazonS3URI(recordingUrl);
 
       if (recordingUrl && recordingUrl !== "" && key) {
-        await fileResolvers.Mutation.deleteCsFile(
+        await fileResolvers.Mutation.removeAWSFile(
           _,
           {
             fileKey: key,

@@ -21,7 +21,7 @@ const server = new ApolloServer({
 
   subscriptions: { path: "/subscriptions" },
 });
-// console.log(process.env.MONGODB);
+
 mongoose
   .connect(process.env.MONGODB, {
     useNewUrlParser: true,
@@ -30,12 +30,7 @@ mongoose
     useUnifiedTopology: true,
   })
   .then(() => {
-    // console.log("MongoDB Connected");
     return server.listen({ port: PORT });
-  })
-  .then(({ url, subscriptionsUrl }) => {
-    // console.log(`🚀 Server ready at ${url}`);
-    // console.log(`🚀 Subscription ready at ${subscriptionsUrl}`);
   })
   .catch((err) => {
     console.error(err);
